@@ -94,8 +94,17 @@ jobs:
           # upgrade, so it must strictly increase between releases. Compare
           # against the previous tag; on the first release there is nothing to
           # compare against and the check is informational only.
-          git fetch --tags --quiet
+          # checkout with fetch-depth: 0 already brings the tags down. Re-fetching
+          # is only a safety net, and it must not abort the step: on a tag build
+          # checkout leaves a LIGHTWEIGHT tag pointing at the commit, so fetching
+          # an ANNOTATED tag of the same name is refused with "would clobber
+          # existing tag" - which --quiet hides entirely, so the step used to die
+          # here with no output at all. --force resolves the clobber; the guard
+          # keeps any other fetch failure non-fatal.
+          git fetch --tags --force || echo "warning: could not refresh tags; using what is present"
+          echo "tags available: $(git tag -l 'v*' --sort=-v:refname | tr '\n' ' ')"
           prev=$(git tag -l 'v*' --sort=-v:refname | grep -v "^${GITHUB_REF_NAME}$" | head -1)
+          echo "previous tag: ${prev:-<none>}"
           python - "$prev" <<'PY'
           import re, subprocess, sys
 
