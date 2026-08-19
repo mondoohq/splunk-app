@@ -1,0 +1,101 @@
+<dashboard version="1.1" script="dashboard.js">
+  <label>Mondoo Inputs</label>
+  <row>
+    <panel>
+      <html>
+        <link rel="stylesheet" type="text/css" href="/static/app/TA-mondoo/css/inputs_page.css" />
+        <div id="mondoo-app">
+
+          <div class="mondoo-header">
+            <div class="mondoo-header-title">Mondoo Log Ingestion</div>
+            <button id="btn-add-input" class="btn btn-primary mondoo-btn-add">+ Add New Input</button>
+          </div>
+
+          <div id="mondoo-alert" class="mondoo-alert" style="display:none;"></div>
+
+          <div id="inputs-table-container">
+            <table class="table table-chrome mondoo-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Log Types</th>
+                  <th>Index</th>
+                  <th>Interval (s)</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="inputs-tbody">
+                <tr><td colspan="6" class="mondoo-loading">Loading inputs&#8230;</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div id="input-form-panel" class="mondoo-form-panel" style="display:none;">
+            <h3 id="form-title">Add New Input</h3>
+            <form id="input-form" autocomplete="off">
+              <input type="hidden" id="field-edit-name" />
+
+              <div class="mondoo-field-group">
+                <label for="field-name">Input Name <span class="mondoo-required">*</span></label>
+                <input type="text" id="field-name" class="mondoo-input" placeholder="e.g. my-space" />
+                <span class="mondoo-hint">Unique identifier for this input instance.</span>
+              </div>
+
+              <div class="mondoo-field-group">
+                <label for="field-blob">Mondoo Config Blob <span class="mondoo-required">*</span></label>
+                <textarea id="field-blob" class="mondoo-input mondoo-textarea" rows="4"
+                  placeholder="Paste a JWT token (eyJ...) or a JSON blob with a token field."></textarea>
+                <span class="mondoo-hint">
+                  Paste a <strong>JWT token</strong> (raw <code>eyJ&#8230;</code> string) or a <strong>JSON blob with a <code>token</code> field</strong>.
+                  Create one in the Mondoo console: <em>Settings &#8594; Service Accounts &#8594; Add &#8594; API Token</em>.
+                  The <em>certificate-based</em> credentials download (with <code>private_key</code> + <code>certificate</code> fields) is for the <code>cnspec</code> / ETL runner and will be <strong>rejected</strong> by this input.
+                </span>
+              </div>
+
+              <div class="mondoo-field-row">
+                <div class="mondoo-field-group mondoo-field-half">
+                  <label>Log Types <span class="mondoo-required">*</span></label>
+                  <div class="mondoo-checkboxes">
+                    <label><input type="checkbox" id="lt-audit" value="audit" checked="checked" /> Audit Logs <span style="color:#999;font-size:0.85em">(requires Editor role in Mondoo)</span></label>
+                    <label><input type="checkbox" id="lt-advisories" value="advisories" /> Advisories</label>
+                  </div>
+                </div>
+                <div class="mondoo-field-group mondoo-field-half">
+                  <label for="field-index">Index</label>
+                  <input type="text" id="field-index" class="mondoo-input" value="main" />
+                </div>
+              </div>
+
+              <div class="mondoo-field-row">
+                <div class="mondoo-field-group mondoo-field-half">
+                  <label for="field-interval">Polling Interval (seconds)</label>
+                  <input type="number" id="field-interval" class="mondoo-input" value="300" min="60" />
+                </div>
+                <div class="mondoo-field-group mondoo-field-half">
+                  <label for="field-lookback">Initial Lookback (days)</label>
+                  <input type="number" id="field-lookback" class="mondoo-input" value="7" min="0" />
+                  <span class="mondoo-hint">0 = full history on first run.</span>
+                </div>
+              </div>
+
+              <div class="mondoo-field-group">
+                <label for="field-mrn">Resource MRN <span class="mondoo-optional">(optional)</span></label>
+                <input type="text" id="field-mrn" class="mondoo-input"
+                  placeholder="//captain.api.mondoo.app/spaces/&lt;space-id&gt;" />
+                <span class="mondoo-hint">Auto-detected from the config blob when left empty.</span>
+              </div>
+
+              <div class="mondoo-form-actions">
+                <button type="submit" id="btn-save" class="btn btn-primary">Save</button>
+                <button type="button" id="btn-cancel" class="btn btn-secondary mondoo-btn-cancel">Cancel</button>
+              </div>
+            </form>
+          </div>
+
+        </div>
+
+      </html>
+    </panel>
+  </row>
+</dashboard>

@@ -1,0 +1,9 @@
+<nav search_view="search">
+  <view name="assets" default="true" />
+  <view name="vulnerabilities" />
+  <view name="checks" />
+  <view name="queries" />
+  <view name="audit" />
+  <view name="data_information" />
+  <view name="search" />
+</nav>

@@ -1,0 +1,35 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Splunk app local overrides (must not be committed; ship default/ only)
+**/local/
+**/local.meta
+**/metadata/local.meta
+
+# AppInspect / packaging artifacts
+build/
+dist/
+*.tar.gz
+*.spl
+.appinspect_report.json
+.appinspect_report.html
+
+# Editor / IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Local dev rig (docker-compose + dev.sh)
+.etl-export/
+.env

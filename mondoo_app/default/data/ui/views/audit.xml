@@ -1,0 +1,327 @@
+
+<dashboard version="2" theme="light">
+    <label>Audit</label>
+    <description>Mondoo platform audit log activity</description>
+    <definition><![CDATA[
+{
+	"visualizations": {
+		"viz_total_events": {
+			"type": "splunk.singlevalue",
+			"dataSources": {
+				"primary": "ds_total_events"
+			},
+			"title": "Total Events"
+		},
+		"viz_unique_users": {
+			"type": "splunk.singlevalue",
+			"dataSources": {
+				"primary": "ds_unique_users"
+			},
+			"title": "Unique Users"
+		},
+		"viz_unique_actions": {
+			"type": "splunk.singlevalue",
+			"dataSources": {
+				"primary": "ds_unique_actions"
+			},
+			"title": "Unique Actions"
+		},
+		"viz_unique_resources": {
+			"type": "splunk.singlevalue",
+			"dataSources": {
+				"primary": "ds_unique_resources"
+			},
+			"title": "Resources Affected"
+		},
+		"viz_activity_over_time": {
+			"type": "splunk.line",
+			"dataSources": {
+				"primary": "ds_activity_over_time"
+			},
+			"title": "Activity Over Time",
+			"options": {
+				"xAxisTitleText": "Time",
+				"yAxisTitleText": "Events"
+			}
+		},
+		"viz_events_by_user": {
+			"type": "splunk.pie",
+			"dataSources": {
+				"primary": "ds_events_by_user"
+			},
+			"title": "Events by User"
+		},
+		"viz_events_by_action": {
+			"type": "splunk.pie",
+			"dataSources": {
+				"primary": "ds_events_by_action"
+			},
+			"title": "Events by Action"
+		},
+		"viz_events_by_space": {
+			"type": "splunk.column",
+			"dataSources": {
+				"primary": "ds_events_by_space"
+			},
+			"title": "Events by Space",
+			"options": {
+				"xAxisTitleText": "Space",
+				"yAxisTitleText": "Count"
+			}
+		},
+		"viz_event_table": {
+			"type": "splunk.table",
+			"dataSources": {
+				"primary": "ds_event_table"
+			},
+			"title": "Audit Events"
+		}
+	},
+	"dataSources": {
+		"ds_total_events": {
+			"type": "ds.search",
+			"options": {
+				"query": "`mondoo_index` sourcetype=\"mondoo:rest:audit\" | stats count as total_events",
+				"queryParameters": {
+					"earliest": "$global_time.earliest$",
+					"latest": "$global_time.latest$"
+				}
+			},
+			"name": "total_events"
+		},
+		"ds_unique_users": {
+			"type": "ds.search",
+			"options": {
+				"query": "`mondoo_index` sourcetype=\"mondoo:rest:audit\" | stats dc(identity_name) as unique_users",
+				"queryParameters": {
+					"earliest": "$global_time.earliest$",
+					"latest": "$global_time.latest$"
+				}
+			},
+			"name": "unique_users"
+		},
+		"ds_unique_actions": {
+			"type": "ds.search",
+			"options": {
+				"query": "`mondoo_index` sourcetype=\"mondoo:rest:audit\" | stats dc(action) as unique_actions",
+				"queryParameters": {
+					"earliest": "$global_time.earliest$",
+					"latest": "$global_time.latest$"
+				}
+			},
+			"name": "unique_actions"
+		},
+		"ds_unique_resources": {
+			"type": "ds.search",
+			"options": {
+				"query": "`mondoo_index` sourcetype=\"mondoo:rest:audit\" | stats dc(resource) as unique_resources",
+				"queryParameters": {
+					"earliest": "$global_time.earliest$",
+					"latest": "$global_time.latest$"
+				}
+			},
+			"name": "unique_resources"
+		},
+		"ds_activity_over_time": {
+			"type": "ds.search",
+			"options": {
+				"query": "`mondoo_index` sourcetype=\"mondoo:rest:audit\" | rex field=action \"\\w+\\.\\w+\\.\\w+\\.(?<short_action>.+)\" | timechart count by short_action",
+				"queryParameters": {
+					"earliest": "$global_time.earliest$",
+					"latest": "$global_time.latest$"
+				}
+			},
+			"name": "activity_over_time"
+		},
+		"ds_events_by_user": {
+			"type": "ds.search",
+			"options": {
+				"query": "`mondoo_index` sourcetype=\"mondoo:rest:audit\" | stats count by identity_name | sort - count",
+				"queryParameters": {
+					"earliest": "$global_time.earliest$",
+					"latest": "$global_time.latest$"
+				}
+			},
+			"name": "events_by_user"
+		},
+		"ds_events_by_action": {
+			"type": "ds.search",
+			"options": {
+				"query": "`mondoo_index` sourcetype=\"mondoo:rest:audit\" | rex field=action \"\\w+\\.\\w+\\.\\w+\\.(?<short_action>.+)\" | stats count by short_action | sort - count",
+				"queryParameters": {
+					"earliest": "$global_time.earliest$",
+					"latest": "$global_time.latest$"
+				}
+			},
+			"name": "events_by_action"
+		},
+		"ds_events_by_space": {
+			"type": "ds.search",
+			"options": {
+				"query": "`mondoo_index` sourcetype=\"mondoo:rest:audit\" | rex field=resource \"/spaces/(?<space>[^/]+)\" | stats count by space | sort - count",
+				"queryParameters": {
+					"earliest": "$global_time.earliest$",
+					"latest": "$global_time.latest$"
+				}
+			},
+			"name": "events_by_space"
+		},
+		"ds_event_table": {
+			"type": "ds.search",
+			"options": {
+				"query": "`mondoo_index` sourcetype=\"mondoo:rest:audit\" | rex field=action \"\\w+\\.\\w+\\.\\w+\\.(?<short_action>.+)\" | rex field=resource \"/spaces/(?<space>[^/]+)\" | table timestamp identity_name short_action space msg | sort - timestamp | rename timestamp as Time identity_name as User short_action as Action space as Space msg as Message",
+				"queryParameters": {
+					"earliest": "$global_time.earliest$",
+					"latest": "$global_time.latest$"
+				}
+			},
+			"name": "event_table"
+		}
+	},
+	"defaults": {
+		"dataSources": {
+			"ds.search": {
+				"options": {
+					"queryParameters": {
+						"latest": "$global_time.latest$",
+						"earliest": "$global_time.earliest$"
+					}
+				}
+			}
+		},
+		"visualizations": {
+			"global": {
+				"showProgressBar": true
+			}
+		}
+	},
+	"inputs": {
+		"input_global_trp": {
+			"type": "input.timerange",
+			"options": {
+				"token": "global_time",
+				"defaultValue": "-7d@h,now"
+			},
+			"title": "Global Time Range"
+		}
+	},
+	"layout": {
+		"options": {},
+		"globalInputs": [
+			"input_global_trp"
+		],
+		"tabs": {
+			"items": [
+				{
+					"layoutId": "layout_1",
+					"label": "Overview"
+				}
+			]
+		},
+		"layoutDefinitions": {
+			"layout_1": {
+				"type": "grid",
+				"structure": [
+					{
+						"item": "viz_total_events",
+						"type": "block",
+						"position": {
+							"x": 0,
+							"y": 0,
+							"w": 360,
+							"h": 150
+						}
+					},
+					{
+						"item": "viz_unique_users",
+						"type": "block",
+						"position": {
+							"x": 360,
+							"y": 0,
+							"w": 360,
+							"h": 150
+						}
+					},
+					{
+						"item": "viz_unique_actions",
+						"type": "block",
+						"position": {
+							"x": 720,
+							"y": 0,
+							"w": 360,
+							"h": 150
+						}
+					},
+					{
+						"item": "viz_unique_resources",
+						"type": "block",
+						"position": {
+							"x": 1080,
+							"y": 0,
+							"w": 360,
+							"h": 150
+						}
+					},
+					{
+						"item": "viz_activity_over_time",
+						"type": "block",
+						"position": {
+							"x": 0,
+							"y": 150,
+							"w": 1440,
+							"h": 300
+						}
+					},
+					{
+						"item": "viz_events_by_user",
+						"type": "block",
+						"position": {
+							"x": 0,
+							"y": 450,
+							"w": 480,
+							"h": 300
+						}
+					},
+					{
+						"item": "viz_events_by_action",
+						"type": "block",
+						"position": {
+							"x": 480,
+							"y": 450,
+							"w": 480,
+							"h": 300
+						}
+					},
+					{
+						"item": "viz_events_by_space",
+						"type": "block",
+						"position": {
+							"x": 960,
+							"y": 450,
+							"w": 480,
+							"h": 300
+						}
+					},
+					{
+						"item": "viz_event_table",
+						"type": "block",
+						"position": {
+							"x": 0,
+							"y": 750,
+							"w": 1440,
+							"h": 400
+						}
+					}
+				],
+				"options": {
+					"width": 1440,
+					"height": 1200
+				}
+			}
+		}
+	},
+	"description": "Mondoo platform audit log activity",
+	"title": "Audit"
+}
+    ]]></definition>
+</dashboard>

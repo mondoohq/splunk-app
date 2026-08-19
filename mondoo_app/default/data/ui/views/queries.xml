@@ -1,0 +1,327 @@
+
+<dashboard version="2" theme="light">
+    <label>Queries</label>
+    <description></description>
+    <definition><![CDATA[
+{
+	"visualizations": {
+		"viz_1LRKhYre": {
+			"type": "splunk.pie",
+			"title": "Count by Result Data Type",
+			"dataSources": {
+				"primary": "ds_EO3KNO7A"
+			},
+			"options": {},
+			"context": {},
+			"containerOptions": {},
+			"showProgressBar": true,
+			"showLastUpdated": false
+		},
+		"viz_5fPS6qOA": {
+			"type": "splunk.pie",
+			"title": "Error Count by Result Data Type",
+			"dataSources": {
+				"primary": "ds_xOXrqZbq"
+			},
+			"containerOptions": {},
+			"showProgressBar": true,
+			"showLastUpdated": false
+		},
+		"viz_OYBimM8e": {
+			"type": "splunk.table",
+			"dataSources": {
+				"primary": "ds_yD9SuOCz"
+			},
+			"title": "Queries",
+			"options": {
+				"columnFormat": {
+					"count": {
+						"data": "> table | seriesByName(\"count\") | formatByType(countColumnFormatEditorConfig)",
+						"align": "auto",
+						"headerAlign": "auto",
+						"textOverflow": "break-word",
+						"rowColors": "> table | seriesByName('count') | pick(countRowColorsEditorConfig)",
+						"rowBackgroundColors": "> table | seriesByName(\"count\") | rangeValue(countRowBackgroundColorsEditorConfig)"
+					}
+				}
+			},
+			"context": {
+				"countColumnFormatEditorConfig": {
+					"number": {
+						"thousandSeparated": false,
+						"unitPosition": "after"
+					}
+				},
+				"countRowColorsEditorConfig": [
+					"#3c444d"
+				],
+				"countRowBackgroundColorsEditorConfig": [
+					{
+						"value": "#45D4BA",
+						"to": 20
+					},
+					{
+						"value": "#9ADEC4",
+						"from": 20,
+						"to": 100
+					},
+					{
+						"value": "#EEE8CE",
+						"from": 100,
+						"to": 300
+					},
+					{
+						"value": "#D7BEE4",
+						"from": 300,
+						"to": 400
+					},
+					{
+						"value": "#C093F9",
+						"from": 400
+					}
+				]
+			},
+			"eventHandlers": [
+				{
+					"type": "drilldown.setToken",
+					"options": {
+						"tokens": [
+							{
+								"token": "set_title",
+								"key": "row.title.value"
+							}
+						]
+					}
+				}
+			]
+		},
+		"viz_G2lNpz1C": {
+			"type": "splunk.linkgraph",
+			"dataSources": {
+				"primary": "ds_sTM9ZLja"
+			},
+			"title": "Queries",
+			"options": {
+				"nodeColor": "#7B56DB"
+			},
+			"containerOptions": {},
+			"showProgressBar": true,
+			"showLastUpdated": false
+		},
+		"viz_bkZLrfzF": {
+			"type": "splunk.column",
+			"dataSources": {
+				"primary": "ds_SyOvVv9P"
+			},
+			"title": "Count last 30 days"
+		},
+		"viz_XLeDzkzW": {
+			"type": "splunk.table",
+			"dataSources": {
+				"primary": "ds_OCLBfXZt"
+			},
+			"containerOptions": {
+				"visibility": {
+					"hideWhenNoData": true
+				}
+			}
+		}
+	},
+	"dataSources": {
+		"ds_K4u7oP1p": {
+			"type": "ds.search",
+			"options": {
+				"query": "`mondoo_index` sourcetype=\"mondoo:json:query\"   | fieldsummary| search field=data.*.*| rex field=field \"data\\.(?<type>\\w+)\\.\"",
+				"queryParameters": {
+					"earliest": "$global_time.earliest$",
+					"latest": "$global_time.latest$"
+				}
+			},
+			"name": "query_data_base_search"
+		},
+		"ds_EO3KNO7A": {
+			"type": "ds.chain",
+			"options": {
+				"extend": "ds_K4u7oP1p",
+				"query": "|stats max(count) as count by type"
+			},
+			"name": "data_count_by_type"
+		},
+		"ds_xOXrqZbq": {
+			"type": "ds.chain",
+			"options": {
+				"extend": "ds_K4u7oP1p",
+				"query": "|search field=data.*.error |stats max(count) as count by type"
+			},
+			"name": "data_error_count_by_type"
+		},
+		"ds_yD9SuOCz": {
+			"type": "ds.search",
+			"options": {
+				"query": "`mondoo_index` sourcetype=\"mondoo:json:query\"| foreach *.error* \n    [| eval error=coalesce(data.error,'<<FIELD>>'), type=\"<<FIELD>>\"]\n|stats count(error) as error_count dc(asset_id) as asset_count count by title mql space_name\n| sort - asset_count",
+				"queryParameters": {
+					"earliest": "$global_time.earliest$",
+					"latest": "$global_time.latest$"
+				}
+			},
+			"name": "query_table"
+		},
+		"ds_sTM9ZLja": {
+			"type": "ds.search",
+			"options": {
+				"query": "`mondoo_index` sourcetype=\"mondoo:json:query\" error\n|fields title space_name mql *.error*\n| foreach *.error* \n    [| eval error=coalesce('data.error','<<FIELD>>')]\n|stats count by error title  |sort 10 - count \n| fields - count",
+				"queryParameters": {
+					"earliest": "$global_time.earliest$",
+					"latest": "$global_time.latest$"
+				}
+			},
+			"name": "query_error"
+		},
+		"ds_SyOvVv9P": {
+			"type": "ds.search",
+			"options": {
+				"query": "| tstats count WHERE `mondoo_index` by _time \n| timechart sum(count) as count",
+				"queryParameters": {
+					"earliest": "-30d@d",
+					"latest": "now"
+				}
+			},
+			"name": "queries_over_time"
+		},
+		"ds_OCLBfXZt": {
+			"type": "ds.search",
+			"options": {
+				"query": "`mondoo_index` sourcetype=\"mondoo:json:query\" title=\"$set_title$\" \n| fields data.* \n| stats last(*) as *\n| rename data.* as * \n| fieldsummary \n| rex field=field \"(?<type>\\w+)\\.(?<attribute>\\S+)\"\n|rex field=values \"value\\\"\\:\\\"(?<value>.+)\\\"\\,\\\"count\"\n|eval information=attribute+\" = \"+value\n|stats values(information) as information by type",
+				"queryParameters": {
+					"earliest": "$global_time.earliest$",
+					"latest": "$global_time.latest$"
+				}
+			},
+			"name": "query_drill_attributes_data"
+		}
+	},
+	"defaults": {
+		"dataSources": {
+			"ds.search": {
+				"options": {
+					"queryParameters": {
+						"latest": "$global_time.latest$",
+						"earliest": "$global_time.earliest$"
+					}
+				}
+			},
+			"ds.spl2": {
+				"options": {
+					"queryParameters": {
+						"latest": "$global_time.latest$",
+						"earliest": "$global_time.earliest$"
+					}
+				}
+			}
+		},
+		"visualizations": {
+			"global": {
+				"showProgressBar": true
+			}
+		}
+	},
+	"inputs": {
+		"input_global_trp": {
+			"type": "input.timerange",
+			"options": {
+				"token": "global_time",
+				"defaultValue": "-24h@h,now"
+			},
+			"title": "Global Time Range"
+		}
+	},
+	"layout": {
+		"options": {},
+		"globalInputs": [
+			"input_global_trp"
+		],
+		"tabs": {
+			"items": [
+				{
+					"layoutId": "layout_1",
+					"label": "New tab"
+				}
+			]
+		},
+		"layoutDefinitions": {
+			"layout_1": {
+				"type": "grid",
+				"structure": [
+					{
+						"item": "viz_1LRKhYre",
+						"type": "block",
+						"position": {
+							"x": 0,
+							"y": 0,
+							"w": 360,
+							"h": 260
+						}
+					},
+					{
+						"item": "viz_bkZLrfzF",
+						"type": "block",
+						"position": {
+							"x": 360,
+							"y": 0,
+							"w": 731,
+							"h": 260
+						}
+					},
+					{
+						"item": "viz_5fPS6qOA",
+						"type": "block",
+						"position": {
+							"x": 1091,
+							"y": 0,
+							"w": 349,
+							"h": 260
+						}
+					},
+					{
+						"item": "viz_OYBimM8e",
+						"type": "block",
+						"position": {
+							"x": 0,
+							"y": 260,
+							"w": 962,
+							"h": 400
+						}
+					},
+					{
+						"item": "viz_G2lNpz1C",
+						"type": "block",
+						"position": {
+							"x": 962,
+							"y": 260,
+							"w": 478,
+							"h": 400
+						}
+					},
+					{
+						"item": "viz_XLeDzkzW",
+						"type": "block",
+						"position": {
+							"x": 0,
+							"y": 660,
+							"w": 1440,
+							"h": 400
+						}
+					}
+				],
+				"options": {
+					"width": 1440,
+					"height": 960
+				}
+			}
+		}
+	},
+	"description": "",
+	"title": "Queries"
+}
+    ]]></definition>
+</dashboard>

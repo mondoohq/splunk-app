@@ -1,0 +1,103 @@
+
+<dashboard version="2" theme="light">
+    <label>Vulnerabilities</label>
+    <description></description>
+    <definition><![CDATA[
+{
+	"visualizations": {
+		"viz_GtDJAz84": {
+			"type": "splunk.table",
+			"dataSources": {
+				"primary": "ds_iLMitACt"
+			},
+			"title": "CVE´s"
+		}
+	},
+	"dataSources": {
+		"ds_iLMitACt": {
+			"type": "ds.search",
+			"options": {
+				"query": "`mondoo_index` sourcetype=\"mondoo:json:vuln\" | stats dc(asset_name) as asset_count by vuln_id cvss_severity summary first_detected_on resolved_on | sort - asset_count resolved_on",
+				"queryParameters": {
+					"earliest": "$global_time.earliest$",
+					"latest": "$global_time.latest$"
+				}
+			},
+			"name": "vuln_table"
+		}
+	},
+	"defaults": {
+		"dataSources": {
+			"ds.search": {
+				"options": {
+					"queryParameters": {
+						"latest": "$global_time.latest$",
+						"earliest": "$global_time.earliest$"
+					}
+				}
+			},
+			"ds.spl2": {
+				"options": {
+					"queryParameters": {
+						"latest": "$global_time.latest$",
+						"earliest": "$global_time.earliest$"
+					}
+				}
+			}
+		},
+		"visualizations": {
+			"global": {
+				"showProgressBar": true
+			}
+		}
+	},
+	"inputs": {
+		"input_global_trp": {
+			"type": "input.timerange",
+			"options": {
+				"token": "global_time",
+				"defaultValue": "-24h@h,now"
+			},
+			"title": "Global Time Range"
+		}
+	},
+	"layout": {
+		"options": {},
+		"globalInputs": [
+			"input_global_trp"
+		],
+		"tabs": {
+			"items": [
+				{
+					"layoutId": "layout_1",
+					"label": "New tab"
+				}
+			]
+		},
+		"layoutDefinitions": {
+			"layout_1": {
+				"type": "grid",
+				"structure": [
+					{
+						"item": "viz_GtDJAz84",
+						"type": "block",
+						"position": {
+							"x": 0,
+							"y": 0,
+							"w": 1440,
+							"h": 400
+						}
+					}
+				],
+				"options": {
+					"width": 1440,
+					"height": 960
+				}
+			}
+		}
+	},
+	"description": "",
+	"title": "Vulnerabilities"
+}
+    ]]></definition>
+</dashboard>

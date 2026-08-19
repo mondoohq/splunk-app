@@ -1,0 +1,30 @@
+[tool.ruff]
+target-version = "py39"
+line-length = 110
+extend-exclude = [
+    "build",
+    ".venv",
+    "**/__pycache__",
+]
+
+[tool.ruff.lint]
+# Conservative defaults — we want signal, not noise.
+select = [
+    "E",    # pycodestyle errors
+    "F",    # pyflakes
+    "W",    # pycodestyle warnings
+    "I",    # isort
+    "B",    # bugbear
+    "UP",   # pyupgrade
+    "SIM",  # flake8-simplify
+]
+ignore = [
+    "E501",  # line length — let ruff format handle this
+    "B008",  # function call as default arg (common for Splunk patterns)
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Test files routinely reach into private helpers, defer imports inside
+# test methods (to keep slow imports off the unit-test path), and don't
+# need pyupgrade rewrites that would diverge from production code.
+"TA-mondoo/tests/**" = ["F401", "F811", "F841", "I001", "E402", "UP"]

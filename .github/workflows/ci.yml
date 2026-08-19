@@ -1,0 +1,352 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Cancel superseded runs on the same PR / branch.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Static analysis on the Python sources (mondoo_api.py, mondoo_input.py,
+  # tests). Fails fast so contributors don't wait on the slower jobs.
+  # ---------------------------------------------------------------------------
+  lint:
+    name: Lint (ruff)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install ruff
+        run: pip install "ruff==0.6.9"
+
+      - name: ruff check
+        run: ruff check TA-mondoo
+
+  # ---------------------------------------------------------------------------
+  # Unit tests across the Python versions Splunk Enterprise ships with:
+  #   Splunk 9.0 / 9.1  → 3.9
+  #   Splunk 9.2        → 3.9 / 3.10
+  #   Splunk 9.3        → 3.11
+  # ---------------------------------------------------------------------------
+  unit-tests:
+    name: Unit tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Run unit tests
+        # Only the offline TestParseBlobUnit class — the live class needs a
+        # real Mondoo token and is not safe to run on PRs from forks.
+        working-directory: TA-mondoo/tests
+        run: python -m unittest -v test_mondoo_input.TestParseBlobUnit
+
+  # ---------------------------------------------------------------------------
+  # Validate non-Python app components: dashboard XML, modular-input scheme,
+  # app.manifest JSON, lookup CSV headers, conf-file syntax sanity.
+  # ---------------------------------------------------------------------------
+  validate-app-files:
+    name: Validate app files (XML / JSON / CSV / conf)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate dashboard XML
+        run: |
+          python - <<'PY'
+          import sys, xml.etree.ElementTree as ET, pathlib
+          root = pathlib.Path('.')
+          failed = []
+          for p in root.rglob('default/data/ui/**/*.xml'):
+              try:
+                  ET.parse(p)
+                  print(f"  OK  {p}")
+              except ET.ParseError as e:
+                  print(f"  FAIL {p}: {e}")
+                  failed.append(str(p))
+          if failed:
+              print(f"\n{len(failed)} XML file(s) failed to parse.", file=sys.stderr)
+              sys.exit(1)
+          PY
+
+      - name: Validate modular-input scheme XML
+        run: |
+          python - <<'PY'
+          import sys, xml.etree.ElementTree as ET, importlib.util
+          spec = importlib.util.spec_from_file_location("mondoo_input", "TA-mondoo/bin/mondoo_input.py")
+          mod = importlib.util.module_from_spec(spec)
+          sys.path.insert(0, "TA-mondoo/bin")
+          spec.loader.exec_module(mod)
+          try:
+              ET.fromstring(mod.SCHEME)
+              print("  OK  modular-input SCHEME parses")
+          except ET.ParseError as e:
+              print(f"  FAIL SCHEME: {e}", file=sys.stderr)
+              sys.exit(1)
+          PY
+
+      - name: Validate app.manifest JSON
+        run: |
+          python - <<'PY'
+          import json, sys, pathlib
+          required = {"schemaVersion", "info", "platformRequirements"}
+          failed = []
+          for p in pathlib.Path('.').rglob('app.manifest'):
+              try:
+                  data = json.loads(p.read_text())
+              except json.JSONDecodeError as e:
+                  print(f"  FAIL {p}: {e}", file=sys.stderr)
+                  failed.append(str(p))
+                  continue
+              missing = required - set(data.keys())
+              if missing:
+                  print(f"  FAIL {p}: missing keys {missing}", file=sys.stderr)
+                  failed.append(str(p))
+                  continue
+              # Confirm version matches default/app.conf
+              app_dir = p.parent
+              app_conf = app_dir / "default" / "app.conf"
+              if app_conf.exists():
+                  manifest_ver = data["info"]["id"]["version"]
+                  conf_ver = None
+                  for line in app_conf.read_text().splitlines():
+                      if line.strip().startswith("version"):
+                          conf_ver = line.split("=", 1)[1].strip()
+                          break
+                  if conf_ver and conf_ver != manifest_ver:
+                      print(f"  FAIL {p}: manifest version {manifest_ver} != app.conf version {conf_ver}", file=sys.stderr)
+                      failed.append(str(p))
+                      continue
+              print(f"  OK  {p}  (version {data['info']['id']['version']})")
+          if failed:
+              sys.exit(1)
+          PY
+
+      - name: Validate lookup CSVs and props.conf references
+        run: |
+          python - <<'PY'
+          import csv, pathlib, re, sys
+          failed = []
+          props_text = pathlib.Path("TA-mondoo/default/props.conf").read_text()
+          transforms_text = pathlib.Path("TA-mondoo/default/transforms.conf").read_text()
+
+          for csv_path in pathlib.Path("TA-mondoo/lookups").glob("*.csv"):
+              with csv_path.open() as fh:
+                  reader = csv.reader(fh)
+                  header = next(reader, [])
+                  rows = list(reader)
+              if not header:
+                  print(f"  FAIL {csv_path}: empty header", file=sys.stderr)
+                  failed.append(str(csv_path)); continue
+              # Check every row has the right column count.
+              bad = [i for i, r in enumerate(rows, 2) if len(r) != len(header)]
+              if bad:
+                  print(f"  FAIL {csv_path}: rows {bad} have wrong column count", file=sys.stderr)
+                  failed.append(str(csv_path)); continue
+              # Confirm at least one LOOKUP-* in props.conf references it (by lookup name).
+              base = csv_path.stem  # mondoo_action_map
+              # Find transforms.conf stanza whose filename matches this CSV.
+              stanzas = re.findall(r"\[([^\]]+)\][^\[]*?filename\s*=\s*" + re.escape(csv_path.name),
+                                   transforms_text)
+              if not stanzas:
+                  print(f"  WARN {csv_path}: no transforms.conf stanza references this file")
+              else:
+                  for s in stanzas:
+                      if s not in props_text and "lookup " + s not in props_text.lower():
+                          print(f"  WARN {csv_path}: transforms stanza [{s}] not referenced from props.conf (LOOKUP-...)")
+              print(f"  OK  {csv_path}  ({len(rows)} rows, {len(header)} cols)")
+          if failed:
+              sys.exit(1)
+          PY
+
+      - name: Validate .conf file syntax (INI-style parse)
+        run: |
+          python - <<'PY'
+          import configparser, pathlib, sys
+          failed = []
+          for p in pathlib.Path('.').rglob('*.conf'):
+              # Skip junk
+              if '.git' in p.parts or 'build' in p.parts:
+                  continue
+              parser = configparser.RawConfigParser(strict=False, delimiters=('=',),
+                                                   inline_comment_prefixes=None,
+                                                   comment_prefixes=('#',))
+              # Splunk allows duplicate keys (e.g. multiple TRANSFORMS-foo);
+              # RawConfigParser with strict=False tolerates them.
+              try:
+                  parser.read(p, encoding='utf-8')
+                  print(f"  OK  {p}  ({len(parser.sections())} stanzas)")
+              except configparser.Error as e:
+                  print(f"  FAIL {p}: {e}", file=sys.stderr)
+                  failed.append(str(p))
+          if failed:
+              sys.exit(1)
+          PY
+
+  # ---------------------------------------------------------------------------
+  # SLIM (Splunk Lifecycle Integration Manager) — the exact check Splunk Cloud
+  # vetting runs against app.manifest.  It catches manifest-schema errors much
+  # faster than AppInspect cloud-mode, so we keep it as its own blocking gate.
+  # ---------------------------------------------------------------------------
+  slim-validate:
+    name: slim validate ${{ matrix.app }}
+    runs-on: ubuntu-latest
+    needs: [validate-app-files]
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [TA-mondoo, mondoo_app]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install splunk-packaging-toolkit
+        run: pip install splunk-packaging-toolkit
+
+      - name: slim version
+        run: slim --version
+
+      - name: slim validate ${{ matrix.app }}
+        run: slim validate ${{ matrix.app }}
+
+  # ---------------------------------------------------------------------------
+  # Build a Splunk package for each app and run splunk-appinspect.
+  # Splits per-app and per-mode so the PR status checks tell you exactly
+  # which surface is failing.
+  # ---------------------------------------------------------------------------
+  appinspect:
+    name: AppInspect ${{ matrix.app }} (${{ matrix.mode }})
+    runs-on: ubuntu-latest
+    needs: [lint, unit-tests, validate-app-files]
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [TA-mondoo, mondoo_app]
+        mode: [precert, cloud]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          # splunk-appinspect supports Python 3.7–3.11; pin to 3.11 here
+          # regardless of the matrix used by unit-tests above.
+          python-version: "3.11"
+
+      - name: Install libmagic
+        run: sudo apt-get update && sudo apt-get install -y libmagic1
+
+      - name: Install splunk-appinspect
+        run: pip install splunk-appinspect
+
+      - name: Package ${{ matrix.app }}
+        run: |
+          mkdir -p build
+          tar czf build/${{ matrix.app }}.tar.gz \
+            --exclude='__pycache__' \
+            --exclude='*.pyc' \
+            --exclude='.venv' \
+            --exclude='tests' \
+            --exclude='.git' \
+            --exclude='._*' \
+            --exclude='.DS_Store' \
+            --exclude='local' \
+            --exclude='local.meta' \
+            --exclude='lib' \
+            ${{ matrix.app }}
+          ls -lh build/
+
+      - name: Run AppInspect (${{ matrix.mode }})
+        id: appinspect
+        # Cloud mode currently reports known issues (plaintext secrets,
+        # see issue #1) — keep it non-blocking until the storage/passwords
+        # refactor lands.  precert is the blocking gate.
+        continue-on-error: ${{ matrix.mode == 'cloud' }}
+        run: |
+          set +e
+          if [ "${{ matrix.mode }}" = "cloud" ]; then
+            splunk-appinspect inspect build/${{ matrix.app }}.tar.gz \
+              --output-file build/${{ matrix.app }}-${{ matrix.mode }}.json \
+              --data-format json \
+              --included-tags cloud
+          else
+            splunk-appinspect inspect build/${{ matrix.app }}.tar.gz \
+              --output-file build/${{ matrix.app }}-${{ matrix.mode }}.json \
+              --data-format json \
+              --mode precert
+          fi
+          rc=$?
+          set -e
+          # Always print a human-readable summary.
+          python - "build/${{ matrix.app }}-${{ matrix.mode }}.json" "${{ matrix.app }}" <<'PY'
+          import json, sys
+          path, app = sys.argv[1], sys.argv[2]
+          with open(path) as f:
+              data = json.load(f)
+          report = (data.get("reports") or [{}])[0]
+          summary = report.get("summary", {})
+          print(f"::group::Summary for {app}")
+          print(f"  passed:   {summary.get('success', 0)}")
+          print(f"  failed:   {summary.get('failure', 0)}")
+          print(f"  error:    {summary.get('error', 0)}")
+          print(f"  warning:  {summary.get('warning', 0)}")
+          print(f"  manual:   {summary.get('manual_check', 0)}")
+          print(f"  skipped:  {summary.get('skipped', 0)}")
+          print(f"  n/a:      {summary.get('not_applicable', 0)}")
+          print("::endgroup::")
+          # List failures/errors so reviewers don't have to dig in the artifact.
+          issues = []
+          for group in report.get("groups", []):
+              for check in group.get("checks", []):
+                  if check.get("result") in ("failure", "error"):
+                      issues.append((check.get("result"), check.get("name"),
+                                     [m.get("message", "") for m in check.get("messages", [])
+                                      if isinstance(m, dict)]))
+          if issues:
+              print(f"::group::Issues ({len(issues)})")
+              for result, name, msgs in issues:
+                  print(f"[{result.upper()}] {name}")
+                  for m in msgs[:3]:
+                      print(f"  -> {m}")
+              print("::endgroup::")
+          PY
+          exit $rc
+
+      - name: Upload AppInspect report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: appinspect-${{ matrix.app }}-${{ matrix.mode }}
+          path: build/${{ matrix.app }}-${{ matrix.mode }}.json
+          retention-days: 14
+
+      - name: Upload packaged app
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-${{ matrix.app }}-${{ matrix.mode }}
+          path: build/${{ matrix.app }}.tar.gz
+          retention-days: 14
