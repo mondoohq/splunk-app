@@ -282,8 +282,9 @@ jobs:
       - name: Run AppInspect (${{ matrix.mode }})
         id: appinspect
         # Cloud mode currently reports known issues (plaintext secrets,
-        # see issue #1) — keep it non-blocking until the storage/passwords
-        # refactor lands.  precert is the blocking gate.
+        # https://github.com/mondoohq/splunk-app/issues/1) — keep it
+        # non-blocking until the storage/passwords refactor lands.
+        # precert is the blocking gate.
         continue-on-error: ${{ matrix.mode == 'cloud' }}
         run: |
           set +e

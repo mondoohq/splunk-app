@@ -1,5 +1,7 @@
 # End-to-end testing
 
+Repository: <https://github.com/mondoohq/splunk-app>
+
 This guide spins up a real Splunk Enterprise instance in Docker and runs the
 TA and dashboard app against it. Every step is wrapped by `dev.sh`, so the
 common case is three commands:
@@ -220,3 +222,11 @@ pick them up automatically.
   paid trial stack to exercise Splunk's Cloud vetting harness.
 - **Splunk Cloud install path generally.** Custom Python modular inputs
   aren't permitted in Cloud stack apps. Run on a customer-operated HF.
+
+## Reporting problems
+
+If the rig behaves differently from what is described here, or a phase fails
+for reasons that look like a bug in the apps rather than the environment,
+open an issue at <https://github.com/mondoohq/splunk-app/issues> with the
+`./dev.sh` command you ran and the relevant `splunkd.log` excerpt (bearer
+tokens are already scrubbed by the TA's logger filter).
