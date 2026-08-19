@@ -1,0 +1,56 @@
+{
+  "schemaVersion": "2.0.0",
+  "info": {
+    "title": "Mondoo",
+    "id": {
+      "group": null,
+      "name": "mondoo_app",
+      "version": "1.0.0"
+    },
+    "author": [
+      {
+        "name": "Mondoo, Inc.",
+        "email": "hello@mondoo.com",
+        "company": "Mondoo, Inc."
+      }
+    ],
+    "releaseDate": null,
+    "description": "Dashboards and visualizations for Mondoo security data ingested by the Mondoo Technology Add-on (TA-mondoo). Provides views for assets, vulnerabilities, checks, queries, audit activity and data quality.",
+    "classification": {
+      "intendedAudience": "IT Ops",
+      "categories": ["Security, Fraud & Compliance"],
+      "developmentStatus": "Production/Stable"
+    },
+    "commonInformationModels": {
+      "Change": "5.0",
+      "Vulnerabilities": "5.0",
+      "Inventory": "5.0"
+    },
+    "license": {
+      "name": "Apache-2.0",
+      "text": "LICENSE",
+      "uri": ""
+    },
+    "privacyPolicy": {
+      "name": "",
+      "text": null,
+      "uri": ""
+    }
+  },
+  "dependencies": {
+    "TA-mondoo": {
+      "version": ">=1.0.0",
+      "optional": true
+    }
+  },
+  "tasks": null,
+  "inputGroups": null,
+  "incompatibleApps": null,
+  "platformRequirements": {
+    "splunk": {
+      "Enterprise": ">=8.0.0"
+    }
+  },
+  "supportedDeployments": ["_standalone", "_distributed"],
+  "targetWorkloads": ["_search_heads"]
+}

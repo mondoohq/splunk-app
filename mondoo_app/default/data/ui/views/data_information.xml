@@ -1,0 +1,361 @@
+
+<dashboard version="2" theme="dark">
+    <label>Data Information</label>
+    <description></description>
+    <definition><![CDATA[
+{
+	"visualizations": {
+		"viz_rkriX5sy": {
+			"type": "splunk.table",
+			"options": {
+				"count": 100,
+				"dataOverlayMode": "none",
+				"drilldown": "none",
+				"showRowNumbers": false,
+				"showInternalFields": false,
+				"columnFormat": {
+					"indexed": {
+						"rowBackgroundColors": "> table | seriesByName(\"indexed\") | matchValue(indexedColumnColorConfig)"
+					}
+				}
+			},
+			"context": {
+				"indexedColumnColorConfig": [
+					{
+						"match": "comming in",
+						"value": "#53A051"
+					},
+					{
+						"match": "not indexed yet",
+						"value": "#DC4E41"
+					}
+				]
+			},
+			"dataSources": {
+				"primary": "ds_zSMKqkxm"
+			},
+			"title": "Checklist Sourcetypes",
+			"showProgressBar": true
+		},
+		"viz_yG2aISIE": {
+			"type": "splunk.pie",
+			"options": {
+				"collapseThreshold": 0.01
+			},
+			"dataSources": {
+				"primary": "ds_aFJn3BWp"
+			},
+			"title": "Count by Sourcetype",
+			"showProgressBar": true
+		},
+		"viz_sEIaoBJT": {
+			"type": "splunk.column",
+			"options": {
+				"yAxisAbbreviation": "auto",
+				"y2AxisAbbreviation": "auto",
+				"showRoundedY2AxisLabels": false,
+				"legendTruncation": "ellipsisMiddle",
+				"showY2MajorGridLines": true,
+				"xAxisLabelRotation": 0,
+				"xAxisTitleVisibility": "show",
+				"yAxisTitleVisibility": "show",
+				"y2AxisTitleVisibility": "show",
+				"yAxisScale": "linear",
+				"showOverlayY2Axis": false,
+				"y2AxisScale": "linear",
+				"dataValuesDisplay": "off",
+				"stackMode": "auto",
+				"showSplitSeries": false,
+				"showIndependentYRanges": false,
+				"legendDisplay": "right"
+			},
+			"dataSources": {
+				"primary": "ds_c3uISzyR"
+			},
+			"title": "Licens Usage over time by Sourcetype",
+			"showProgressBar": true
+		},
+		"viz_knnbzS0O": {
+			"type": "splunk.singlevalue",
+			"options": {
+				"numberPrecision": 2,
+				"sparklineDisplay": "below",
+				"trendDisplay": "absolute",
+				"unit": "MB",
+				"unitPosition": "after",
+				"shouldUseThousandSeparators": true,
+				"majorColor": "#ffffff"
+			},
+			"context": {
+				"convertedColorRange": [
+					{
+						"from": 100,
+						"value": "#dc4e41"
+					},
+					{
+						"from": 70,
+						"to": 100,
+						"value": "#f1813f"
+					},
+					{
+						"from": 30,
+						"to": 70,
+						"value": "#f8be34"
+					},
+					{
+						"from": 0,
+						"to": 30,
+						"value": "#0877a6"
+					},
+					{
+						"to": 0,
+						"value": "#53a051"
+					}
+				]
+			},
+			"dataSources": {
+				"primary": "ds_7SqXKmdn"
+			},
+			"title": "License Usage",
+			"showProgressBar": true
+		},
+		"viz_FZOa3w9b": {
+			"type": "splunk.table",
+			"options": {
+				"count": 100,
+				"dataOverlayMode": "none",
+				"drilldown": "none",
+				"showRowNumbers": false,
+				"showInternalFields": false
+			},
+			"dataSources": {
+				"primary": "ds_9FMmwOCY"
+			},
+			"title": "Count and Sourcetypes by host",
+			"showProgressBar": true
+		},
+		"viz_LJXc9mjs": {
+			"type": "splunk.table",
+			"options": {
+				"count": 100,
+				"dataOverlayMode": "none",
+				"drilldown": "none",
+				"showRowNumbers": false,
+				"showInternalFields": false
+			},
+			"dataSources": {
+				"primary": "ds_eIbqciHE"
+			},
+			"title": "Interval of the inputs",
+			"showProgressBar": true
+		}
+	},
+	"dataSources": {
+		"ds_TwUdxmDa": {
+			"type": "ds.search",
+			"options": {
+				"query": "| tstats count WHERE `sn_indexes`  by host",
+				"queryParameters": {
+					"earliest": "-24h@h",
+					"latest": "now"
+				}
+			},
+			"name": "host search"
+		},
+		"ds_aFJn3BWp": {
+			"type": "ds.search",
+			"options": {
+				"query": "|tstats count WHERE `mondoo_index` sourcetype=\"mondoo:*\" by sourcetype",
+				"queryParameters": {
+					"earliest": "$settime.earliest$",
+					"latest": "$settime.latest$",
+					"sampleRatio": 1
+				}
+			},
+			"name": "Count by Sourcetype - Pie chart search"
+		},
+		"ds_c3uISzyR": {
+			"type": "ds.search",
+			"options": {
+				"query": "index=_internal source=*license_usage.log* type=\"Usage\"   st=\"mondoo:*\"\n| fields idx, b , st\n| rename idx as index\n|eval b=b/1024/1024\n| timechart sum(b) as MB by st",
+				"queryParameters": {
+					"earliest": "$settime.earliest$",
+					"latest": "$settime.latest$",
+					"sampleRatio": 1
+				}
+			},
+			"name": "Licens Usage over time by Sourcetype - Column chart search"
+		},
+		"ds_7SqXKmdn": {
+			"type": "ds.search",
+			"options": {
+				"query": "index=_internal source=*license_usage.log* type=\"Usage\"  st=\"mondoo:*\"\n| fields idx, b\n| rename idx as index\n| stats sum(b) as MB\n| eval MB= MB/1024/1024",
+				"queryParameters": {
+					"earliest": "$settime.earliest$",
+					"latest": "$settime.latest$",
+					"sampleRatio": 1
+				}
+			},
+			"name": "License Usage - Single value search"
+		},
+		"ds_9FMmwOCY": {
+			"type": "ds.search",
+			"options": {
+				"query": "`mondoo_index` sourcetype=\"mondoo:*\" |stats values(sourcetype) as sourcetype count by space_name",
+				"queryParameters": {
+					"earliest": "$settime.earliest$",
+					"latest": "$settime.latest$",
+					"sampleRatio": 1
+				}
+			},
+			"name": "Count and Sourcetypes by host - Table search"
+		},
+		"ds_eIbqciHE": {
+			"type": "ds.search",
+			"options": {
+				"query": "| rest /services/data/inputs/all/|search title=*mondoo*|table title index sourcetype host eai:type eai:acl.app\tauthor",
+				"queryParameters": {
+					"earliest": "$settime.earliest$",
+					"latest": "$settime.latest$",
+					"sampleRatio": 1
+				}
+			},
+			"name": "Interval of the inputs - Table search"
+		},
+		"ds_zSMKqkxm": {
+			"type": "ds.search",
+			"options": {
+				"query": "| tstats count WHERE `mondoo_index` sourcetype=\"mondoo:*\" by sourcetype | append [| makeresults count=9 | streamstats count | eval sourcetype=case(count=1,\"mondoo:json:asset\", count=2,\"mondoo:json:check\",count=3,\"mondoo:json:package\",count=4,\"mondoo:json:query\",count=5,\"mondoo:json:vuln\",count=6,\"mondoo:json:control\",count=7,\"mondoo:rest:audit\",count=8,\"mondoo:rest:advisory\",count=9,\"mondoo:rest:agent\")] | transaction sourcetype | eval indexed=if(eventcount=2,\"comming in\",\"not indexed yet\") | table sourcetype, indexed",
+				"queryParameters": {
+					"earliest": "$settime.earliest$",
+					"latest": "$settime.latest$"
+				}
+			},
+			"name": "Checklist Sourcetypes - Table search"
+		}
+	},
+	"defaults": {
+		"dataSources": {
+			"ds.search": {
+				"options": {
+					"queryParameters": {}
+				}
+			},
+			"ds.spl2": {
+				"options": {
+					"queryParameters": {}
+				}
+			}
+		},
+		"visualizations": {
+			"global": {
+				"showProgressBar": true
+			}
+		}
+	},
+	"inputs": {
+		"input_iREx2Q0r": {
+			"type": "input.timerange",
+			"options": {
+				"token": "settime",
+				"defaultValue": "-24h@h,now"
+			},
+			"title": ""
+		}
+	},
+	"layout": {
+		"options": {
+			"submitButton": false
+		},
+		"globalInputs": [
+			"input_iREx2Q0r"
+		],
+		"tabs": {
+			"items": [
+				{
+					"layoutId": "layout_1",
+					"label": "New tab"
+				}
+			]
+		},
+		"layoutDefinitions": {
+			"layout_1": {
+				"type": "grid",
+				"structure": [
+					{
+						"item": "viz_rkriX5sy",
+						"type": "block",
+						"position": {
+							"x": 0,
+							"y": 0,
+							"w": 721,
+							"h": 255
+						}
+					},
+					{
+						"item": "viz_yG2aISIE",
+						"type": "block",
+						"position": {
+							"x": 721,
+							"y": 0,
+							"w": 719,
+							"h": 255
+						}
+					},
+					{
+						"item": "viz_sEIaoBJT",
+						"type": "block",
+						"position": {
+							"x": 0,
+							"y": 255,
+							"w": 721,
+							"h": 214
+						}
+					},
+					{
+						"item": "viz_knnbzS0O",
+						"type": "block",
+						"position": {
+							"x": 721,
+							"y": 255,
+							"w": 719,
+							"h": 214
+						}
+					},
+					{
+						"item": "viz_FZOa3w9b",
+						"type": "block",
+						"position": {
+							"x": 0,
+							"y": 469,
+							"w": 1440,
+							"h": 250
+						}
+					},
+					{
+						"item": "viz_LJXc9mjs",
+						"type": "block",
+						"position": {
+							"x": 0,
+							"y": 719,
+							"w": 1440,
+							"h": 250
+						}
+					}
+				],
+				"options": {
+					"width": 1440,
+					"height": 969
+				}
+			}
+		}
+	},
+	"description": "",
+	"title": "Data Information",
+	"applicationProperties": {
+		"hideEdit": false,
+		"hideExport": false
+	}
+}
+    ]]></definition>
+</dashboard>

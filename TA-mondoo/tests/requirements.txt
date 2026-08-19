@@ -1,0 +1,8 @@
+# Test dependencies for the Mondoo Splunk TA
+# No runtime dependencies beyond Python stdlib – the TA uses only urllib/json/xml.
+# These are only needed for the test runner itself.
+
+# Nothing extra required – stdlib unittest is used for all tests.
+# Add packages here if you extend the tests with third-party tooling, e.g.:
+#   pytest
+#   responses   # for HTTP mocking

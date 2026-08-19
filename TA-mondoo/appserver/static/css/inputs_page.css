@@ -1,0 +1,245 @@
+/* Mondoo TA – Inputs page styles */
+
+#mondoo-app {
+    padding: 16px 0;
+    font-family: "Splunk Platform Sans", "Proxima Nova", Arial, sans-serif;
+}
+
+/* Header */
+.mondoo-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.mondoo-header-title {
+    display: flex;
+    align-items: center;
+    font-size: 20px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.mondoo-logo {
+    height: 28px;
+    margin-right: 10px;
+}
+
+.mondoo-btn-add {
+    min-width: 140px;
+}
+
+/* Alert */
+.mondoo-alert {
+    padding: 10px 16px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+    font-size: 14px;
+}
+
+.mondoo-alert-success {
+    background: #e6f4ea;
+    border: 1px solid #a8d5b5;
+    color: #1e6e3a;
+}
+
+.mondoo-alert-error {
+    background: #fdecea;
+    border: 1px solid #f5c6c2;
+    color: #b31b1b;
+}
+
+/* Table */
+.mondoo-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 24px;
+}
+
+.mondoo-table th {
+    background: #f5f5f5;
+    font-weight: 600;
+    font-size: 13px;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 10px 12px;
+    border-bottom: 2px solid #ddd;
+    text-align: left;
+}
+
+.mondoo-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #eee;
+    font-size: 14px;
+    vertical-align: middle;
+}
+
+.mondoo-table tbody tr:hover {
+    background: #fafafa;
+}
+
+.mondoo-loading,
+.mondoo-empty {
+    color: #888;
+    font-style: italic;
+    text-align: center;
+    padding: 24px !important;
+}
+
+.mondoo-error {
+    color: #b31b1b;
+    text-align: center;
+    padding: 16px !important;
+}
+
+/* Status badges */
+.mondoo-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.mondoo-badge-enabled {
+    background: #d4edda;
+    color: #155724;
+}
+
+.mondoo-badge-disabled {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* Action buttons in table */
+.mondoo-actions {
+    white-space: nowrap;
+}
+
+.mondoo-actions .btn {
+    margin-right: 4px;
+}
+
+/* Add/Edit form panel */
+.mondoo-form-panel {
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 24px 28px;
+    margin-top: 8px;
+}
+
+.mondoo-form-panel h3 {
+    margin: 0 0 20px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 12px;
+}
+
+/* Form fields */
+.mondoo-field-group {
+    margin-bottom: 16px;
+}
+
+.mondoo-field-row {
+    display: flex;
+    gap: 16px;
+}
+
+.mondoo-field-half {
+    flex: 1;
+}
+
+.mondoo-field-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #444;
+    margin-bottom: 5px;
+}
+
+.mondoo-required {
+    color: #c0392b;
+}
+
+.mondoo-optional {
+    color: #888;
+    font-weight: 400;
+    font-size: 12px;
+}
+
+.mondoo-input {
+    width: 100%;
+    padding: 7px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #333;
+    background: #fff;
+    box-sizing: border-box;
+    transition: border-color 0.15s;
+}
+
+.mondoo-input:focus {
+    outline: none;
+    border-color: #5a9fd4;
+    box-shadow: 0 0 0 2px rgba(90, 159, 212, 0.2);
+}
+
+.mondoo-textarea {
+    resize: vertical;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 12px;
+}
+
+.mondoo-hint {
+    display: block;
+    font-size: 11px;
+    color: #888;
+    margin-top: 4px;
+}
+
+/* Checkboxes */
+.mondoo-checkboxes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 8px 0;
+}
+
+.mondoo-checkboxes label {
+    font-weight: 400 !important;
+    font-size: 13px !important;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    color: #333 !important;
+}
+
+/* Form actions */
+.mondoo-form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.mondoo-btn-cancel {
+    background: #fff;
+    border-color: #ccc;
+    color: #555;
+}
+
+.mondoo-btn-cancel:hover {
+    background: #f0f0f0;
+}

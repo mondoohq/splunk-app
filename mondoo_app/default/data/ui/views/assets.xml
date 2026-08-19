@@ -1,0 +1,589 @@
+
+<dashboard version="2" theme="light">
+    <label>Assets</label>
+    <description></description>
+    <definition><![CDATA[
+{
+	"visualizations": {
+		"viz_DLCM0V2X": {
+			"containerOptions": {
+				"visibility": {
+					"hideWhenNoData": true
+				}
+			},
+			"context": {
+				"backgroundColorEditorConfig": [
+					{
+						"to": 20,
+						"value": "#118832"
+					},
+					{
+						"from": 20,
+						"to": 40,
+						"value": "#669922"
+					},
+					{
+						"from": 40,
+						"to": 60,
+						"value": "#CBA700"
+					},
+					{
+						"from": 60,
+						"to": 80,
+						"value": "#D94E17"
+					},
+					{
+						"from": 80,
+						"value": "#D41F1F"
+					}
+				]
+			},
+			"dataSources": {
+				"primary": "ds_dmzObdT8"
+			},
+			"options": {
+				"backgroundColor": "> majorValue | rangeValue(backgroundColorEditorConfig)"
+			},
+			"title": "Base Score",
+			"type": "splunk.singlevalue"
+		},
+		"viz_NhBWcwlV": {
+			"containerOptions": {
+				"visibility": {
+					"hideWhenNoData": true
+				}
+			},
+			"context": {
+				"backgroundColorEditorConfig": [
+					{
+						"to": 20,
+						"value": "#118832"
+					},
+					{
+						"from": 20,
+						"to": 40,
+						"value": "#669922"
+					},
+					{
+						"from": 40,
+						"to": 60,
+						"value": "#CBA700"
+					},
+					{
+						"from": 60,
+						"to": 80,
+						"value": "#D94E17"
+					},
+					{
+						"from": 80,
+						"value": "#D41F1F"
+					}
+				]
+			},
+			"dataSources": {
+				"primary": "ds_01hujMY7"
+			},
+			"options": {
+				"backgroundColor": "> majorValue | rangeValue(backgroundColorEditorConfig)"
+			},
+			"title": "Vulnerability Base Score",
+			"type": "splunk.singlevalue"
+		},
+		"viz_PEzL2kAQ": {
+			"containerOptions": {
+				"visibility": {
+					"hideWhenNoData": true
+				}
+			},
+			"dataSources": {
+				"primary": "ds_vBoEn6sx"
+			},
+			"type": "splunk.table",
+			"eventHandlers": [],
+			"options": {
+				"headerVisibility": "none"
+			},
+			"showProgressBar": true,
+			"showLastUpdated": false,
+			"title": "Risk Factors"
+		},
+		"viz_TM8O1HOS": {
+			"dataSources": {
+				"primary": "ds_xwHUDyNU"
+			},
+			"title": "Asset count over 30 days",
+			"type": "splunk.column"
+		},
+		"viz_iIU4ucCq": {
+			"containerOptions": {
+				"visibility": {
+					"hideWhenNoData": true
+				}
+			},
+			"context": {
+				"backgroundColorEditorConfig": [
+					{
+						"to": 20,
+						"value": "#118832"
+					},
+					{
+						"from": 20,
+						"to": 40,
+						"value": "#669922"
+					},
+					{
+						"from": 40,
+						"to": 60,
+						"value": "#CBA700"
+					},
+					{
+						"from": 60,
+						"to": 80,
+						"value": "#D94E17"
+					},
+					{
+						"from": 80,
+						"value": "#D41F1F"
+					}
+				]
+			},
+			"dataSources": {
+				"primary": "ds_tAoRQTKf"
+			},
+			"options": {
+				"backgroundColor": "> majorValue | rangeValue(backgroundColorEditorConfig)"
+			},
+			"title": "Risk Score",
+			"type": "splunk.singlevalue"
+		},
+		"viz_pnpaDo8Q": {
+			"dataSources": {
+				"primary": "ds_GbF2Zj97"
+			},
+			"eventHandlers": [
+				{
+					"type": "drilldown.setToken",
+					"options": {
+						"tokens": [
+							{
+								"key": "row.name.value",
+								"token": "set_asset_drill"
+							},
+							{
+								"token": "set_asset_id",
+								"key": "row._asset_id.value"
+							},
+							{
+								"token": "set_space_id",
+								"key": "row._space_id.value"
+							}
+						]
+					}
+				}
+			],
+			"title": "Assets",
+			"type": "splunk.table",
+			"options": {
+				"showInternalFields": false
+			}
+		},
+		"viz_zLto9ZKK": {
+			"type": "splunk.singlevalue",
+			"dataSources": {
+				"primary": "ds_lCyOTSzd"
+			},
+			"eventHandlers": [
+				{
+					"type": "drilldown.customUrl",
+					"options": {
+						"url": "https://console.mondoo.com/space/inventory/$set_asset_id$/overview?spaceId=$set_space_id$",
+						"newTab": true
+					}
+				}
+			],
+			"containerOptions": {
+				"visibility": {
+					"hideWhenNoData": true
+				}
+			},
+			"showProgressBar": true,
+			"showLastUpdated": false,
+			"options": {
+				"backgroundColor": "#ad60e1"
+			}
+		},
+		"viz_h0ysWp78": {
+			"type": "splunk.pie",
+			"options": {
+				"value": "> primary | seriesByName('dc(name)')"
+			},
+			"dataSources": {
+				"primary": "ds_dQN2ZJ3u"
+			}
+		},
+		"viz_GJoU1CYj": {
+			"type": "splunk.pie",
+			"options": {},
+			"dataSources": {
+				"primary": "ds_Y3hTDr0M"
+			}
+		},
+		"viz_rJzNUnbs": {
+			"type": "splunk.linkgraph",
+			"dataSources": {
+				"primary": "ds_JF5aW9xH"
+			},
+			"containerOptions": {
+				"description": {
+					"color": "#7B56DB"
+				},
+				"title": {
+					"color": "#7B56DB"
+				}
+			},
+			"showProgressBar": true,
+			"showLastUpdated": false,
+			"options": {
+				"nodeColor": "#7B56DB"
+			}
+		}
+	},
+	"dataSources": {
+		"ds_01hujMY7": {
+			"name": "vuln_base_score_search",
+			"options": {
+				"extend": "ds_KUNvlcrk",
+				"query": "|table vuln_base_score"
+			},
+			"type": "ds.chain"
+		},
+		"ds_6TZBZd6N": {
+			"name": "space_input_search",
+			"options": {
+				"query": "`mondoo_index` sourcetype=\"mondoo:json:asset\" |stats count by space_name",
+				"queryParameters": {
+					"earliest": "$global_time.earliest$",
+					"latest": "$global_time.latest$"
+				}
+			},
+			"type": "ds.search"
+		},
+		"ds_GbF2Zj97": {
+			"name": "assets_table",
+			"options": {
+				"extend": "ds_en310PiW",
+				"query": "| rename space_id as _space_id asset_id as _asset_id | table name space_name platform_name created_by _asset_id _space_id",
+				"showInternalFields": false
+			},
+			"type": "ds.chain"
+		},
+		"ds_dmzObdT8": {
+			"name": "base_score_search",
+			"options": {
+				"extend": "ds_KUNvlcrk",
+				"query": "|table base_score"
+			},
+			"type": "ds.chain"
+		},
+		"ds_en310PiW": {
+			"name": "asset_base_search",
+			"options": {
+				"query": "`mondoo_index` sourcetype=\"mondoo:json:asset\" name=\"*$set_asset$*\" space_name=\"$set_space$\"\n|stats last(asset_id) as asset_id last(space_id) as space_id last(labels.created-by) as created_by last(base_score) as base_score last(risk_score) as risk_score last(vuln_base_score) as vuln_base_score values(risk_factors{}.name) as risk_factors by name space_name platform_name| sort - base_score, risk_score, vuln_base_score",
+				"queryParameters": {
+					"earliest": "$global_time.earliest$",
+					"latest": "$global_time.latest$"
+				}
+			},
+			"type": "ds.search"
+		},
+		"ds_tAoRQTKf": {
+			"name": "risk_score_search",
+			"options": {
+				"extend": "ds_KUNvlcrk",
+				"query": "|table risk_score"
+			},
+			"type": "ds.chain"
+		},
+		"ds_vBoEn6sx": {
+			"name": "risk_factors_search",
+			"options": {
+				"extend": "ds_KUNvlcrk",
+				"query": "| fillnull value=\"No Risk Factors\"|table risk_factors"
+			},
+			"type": "ds.chain"
+		},
+		"ds_xwHUDyNU": {
+			"name": "30d_asset_count",
+			"options": {
+				"query": "`mondoo_index` sourcetype=\"mondoo:json:asset\" |timechart dc(name) as asset",
+				"queryParameters": {
+					"earliest": "-30d@d",
+					"latest": "now"
+				}
+			},
+			"type": "ds.search"
+		},
+		"ds_KUNvlcrk": {
+			"type": "ds.chain",
+			"options": {
+				"extend": "ds_en310PiW",
+				"query": "|search name=\"$set_asset_drill$\""
+			},
+			"name": "asset_name_search"
+		},
+		"ds_LvnUV80H": {
+			"type": "ds.chain",
+			"options": {
+				"extend": "ds_KUNvlcrk",
+				"query": "| eval text=\"Link to \"+name, url=replace(url,\"\\\"\",\"\\\"\")\n| fields text,url"
+			},
+			"name": "url_search"
+		},
+		"ds_lCyOTSzd": {
+			"type": "ds.search",
+			"options": {
+				"query": "| makeresults count=1\n| eval text=\"Link to the asset $set_asset_drill$\""
+			},
+			"name": "link_text"
+		},
+		"ds_dQN2ZJ3u": {
+			"type": "ds.chain",
+			"options": {
+				"extend": "ds_en310PiW",
+				"query": "|stats dc(name) by space_name"
+			},
+			"name": "dc_by_space"
+		},
+		"ds_Y3hTDr0M": {
+			"type": "ds.chain",
+			"options": {
+				"extend": "ds_en310PiW",
+				"query": "|stats dc(name) by platform_name"
+			},
+			"name": "dc_by_platform"
+		},
+		"ds_JF5aW9xH": {
+			"type": "ds.chain",
+			"options": {
+				"extend": "ds_GbF2Zj97",
+				"query": "|fillnull value=\"n/a\"\n| table space_name platform_name"
+			},
+			"name": "link_graph_search"
+		}
+	},
+	"title": "Assets",
+	"description": "",
+	"inputs": {
+		"input_3Q65QRuY": {
+			"context": {
+				"formattedConfig": {
+					"number": {
+						"prefix": ""
+					}
+				},
+				"formattedStatics": ">statics | formatByType(formattedConfig)",
+				"label": ">primary | seriesByName(\"space_name\") | renameSeries(\"label\") | formatByType(formattedConfig)",
+				"statics": [
+					[
+						"All"
+					],
+					[
+						"*"
+					]
+				],
+				"value": ">primary | seriesByName(\"space_name\") | renameSeries(\"value\") | formatByType(formattedConfig)"
+			},
+			"dataSources": {
+				"primary": "ds_6TZBZd6N"
+			},
+			"options": {
+				"defaultValue": "*",
+				"items": ">frame(label, value) | prepend(formattedStatics) | objects()",
+				"token": "set_space"
+			},
+			"title": "Dropdown Input Title",
+			"type": "input.dropdown"
+		},
+		"input_global_trp": {
+			"options": {
+				"defaultValue": "-24h@h,now",
+				"token": "global_time"
+			},
+			"title": "Global Time Range",
+			"type": "input.timerange"
+		},
+		"input_y8L0u7mo": {
+			"options": {
+				"defaultValue": "*",
+				"token": "set_asset"
+			},
+			"title": "Text Input Title",
+			"type": "input.text"
+		}
+	},
+	"defaults": {
+		"dataSources": {
+			"ds.search": {
+				"options": {
+					"queryParameters": {
+						"earliest": "$global_time.earliest$",
+						"latest": "$global_time.latest$"
+					}
+				}
+			},
+			"ds.spl2": {
+				"options": {
+					"queryParameters": {
+						"earliest": "$global_time.earliest$",
+						"latest": "$global_time.latest$"
+					}
+				}
+			}
+		},
+		"visualizations": {
+			"global": {
+				"showProgressBar": true
+			}
+		}
+	},
+	"layout": {
+		"globalInputs": [
+			"input_global_trp",
+			"input_y8L0u7mo",
+			"input_3Q65QRuY"
+		],
+		"layoutDefinitions": {
+			"layout_1": {
+				"options": {
+					"height": 960,
+					"width": 1440
+				},
+				"structure": [
+					{
+						"item": "viz_pnpaDo8Q",
+						"position": {
+							"h": 401,
+							"w": 756,
+							"x": 0,
+							"y": 0
+						},
+						"type": "block"
+					},
+					{
+						"item": "viz_DLCM0V2X",
+						"position": {
+							"h": 180,
+							"w": 209,
+							"x": 756,
+							"y": 0
+						},
+						"type": "block"
+					},
+					{
+						"item": "viz_iIU4ucCq",
+						"position": {
+							"h": 180,
+							"w": 246,
+							"x": 965,
+							"y": 0
+						},
+						"type": "block"
+					},
+					{
+						"item": "viz_NhBWcwlV",
+						"position": {
+							"h": 180,
+							"w": 229,
+							"x": 1211,
+							"y": 0
+						},
+						"type": "block"
+					},
+					{
+						"item": "viz_PEzL2kAQ",
+						"position": {
+							"h": 157,
+							"w": 684,
+							"x": 756,
+							"y": 180
+						},
+						"type": "block"
+					},
+					{
+						"item": "viz_zLto9ZKK",
+						"type": "block",
+						"position": {
+							"h": 64,
+							"w": 684,
+							"x": 756,
+							"y": 337
+						}
+					},
+					{
+						"item": "viz_h0ysWp78",
+						"type": "block",
+						"position": {
+							"h": 158,
+							"w": 437,
+							"x": 0,
+							"y": 401
+						}
+					},
+					{
+						"item": "viz_GJoU1CYj",
+						"type": "block",
+						"position": {
+							"h": 158,
+							"w": 443,
+							"x": 437,
+							"y": 401
+						}
+					},
+					{
+						"item": "viz_rJzNUnbs",
+						"type": "block",
+						"position": {
+							"h": 522,
+							"w": 560,
+							"x": 880,
+							"y": 401
+						}
+					},
+					{
+						"item": "viz_TM8O1HOS",
+						"position": {
+							"h": 364,
+							"w": 880,
+							"x": 0,
+							"y": 559
+						},
+						"type": "block"
+					}
+				],
+				"type": "grid"
+			}
+		},
+		"options": {},
+		"tabs": {
+			"items": [
+				{
+					"label": "New tab",
+					"layoutId": "layout_1"
+				}
+			]
+		}
+	},
+	"applicationProperties": {
+		"hideEdit": false
+	},
+	"expressions": {
+		"conditions": {
+			"condition_E0VIWhRI": {
+				"name": "Condition 1",
+				"value": "isSet($set_asset_drill$)"
+			}
+		}
+	}
+}
+    ]]></definition>
+</dashboard>

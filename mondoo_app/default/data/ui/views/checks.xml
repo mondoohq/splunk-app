@@ -1,0 +1,178 @@
+
+<dashboard version="2" theme="light">
+    <label>Checks</label>
+    <description></description>
+    <definition><![CDATA[
+{
+	"visualizations": {
+		"viz_8TsnISPG": {
+			"type": "splunk.table",
+			"dataSources": {
+				"primary": "ds_5hSuCWHj"
+			},
+			"title": "Checks",
+			"eventHandlers": [
+				{
+					"type": "drilldown.setToken",
+					"options": {
+						"tokens": [
+							{
+								"token": "set_title",
+								"key": "row.title.value"
+							}
+						]
+					}
+				}
+			]
+		},
+		"viz_RFQbnXVB": {
+			"type": "splunk.pie",
+			"options": {},
+			"dataSources": {
+				"primary": "ds_ObcBFQaM"
+			}
+		},
+		"viz_jm8B2m3T": {
+			"type": "splunk.table",
+			"dataSources": {
+				"primary": "ds_qnniGi0v"
+			},
+			"containerOptions": {
+				"visibility": {
+					"hideWhenNoData": true
+				}
+			}
+		}
+	},
+	"dataSources": {
+		"ds_Ocq9CKEY": {
+			"type": "ds.search",
+			"options": {
+				"query": "`mondoo_index` sourcetype=\"mondoo:json:check\"\n| fields title,space_name, _time, status, asset_id,  risk_score, assessment, mql",
+				"queryParameters": {
+					"earliest": "$global_time.earliest$",
+					"latest": "$global_time.latest$"
+				}
+			},
+			"name": "checks_base_search"
+		},
+		"ds_5hSuCWHj": {
+			"type": "ds.chain",
+			"options": {
+				"extend": "ds_Ocq9CKEY",
+				"query": "| stats last(_time) as _time count by  title, status, risk_score"
+			},
+			"name": "checks_table"
+		},
+		"ds_ObcBFQaM": {
+			"type": "ds.chain",
+			"options": {
+				"query": "| stats count by status",
+				"extend": "ds_Ocq9CKEY"
+			},
+			"name": "checks_by_status"
+		},
+		"ds_qnniGi0v": {
+			"type": "ds.chain",
+			"options": {
+				"extend": "ds_Ocq9CKEY",
+				"query": "| search title=\"$set_title$\" |join asset_id [|search `mondoo_index` sourcetype=\"mondoo:json:asset\"\n|stats last(asset_id) as asset_id  by name space_name platform_name]"
+			},
+			"name": "Search_1"
+		}
+	},
+	"defaults": {
+		"dataSources": {
+			"ds.search": {
+				"options": {
+					"queryParameters": {
+						"latest": "$global_time.latest$",
+						"earliest": "$global_time.earliest$"
+					}
+				}
+			},
+			"ds.spl2": {
+				"options": {
+					"queryParameters": {
+						"latest": "$global_time.latest$",
+						"earliest": "$global_time.earliest$"
+					}
+				}
+			}
+		},
+		"visualizations": {
+			"global": {
+				"showProgressBar": true
+			}
+		}
+	},
+	"inputs": {
+		"input_global_trp": {
+			"type": "input.timerange",
+			"options": {
+				"token": "global_time",
+				"defaultValue": "-24h@h,now"
+			},
+			"title": "Global Time Range"
+		}
+	},
+	"layout": {
+		"options": {},
+		"globalInputs": [
+			"input_global_trp"
+		],
+		"tabs": {
+			"items": [
+				{
+					"layoutId": "layout_1",
+					"label": "New tab"
+				}
+			]
+		},
+		"layoutDefinitions": {
+			"layout_1": {
+				"type": "grid",
+				"structure": [
+					{
+						"item": "viz_RFQbnXVB",
+						"type": "block",
+						"position": {
+							"x": 0,
+							"y": 400,
+							"w": 1440,
+							"h": 400
+						}
+					},
+					{
+						"item": "viz_jm8B2m3T",
+						"type": "block",
+						"position": {
+							"x": 719,
+							"y": 0,
+							"w": 721,
+							"h": 400
+						}
+					},
+					{
+						"item": "viz_8TsnISPG",
+						"type": "block",
+						"position": {
+							"x": 0,
+							"y": 0,
+							"w": 719,
+							"h": 400
+						}
+					}
+				],
+				"options": {
+					"width": 1440,
+					"height": 960
+				}
+			}
+		}
+	},
+	"description": "",
+	"title": "Checks"
+}
+    ]]></definition>
+</dashboard>

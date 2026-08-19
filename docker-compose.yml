@@ -1,0 +1,40 @@
+# ---------------------------------------------------------------------------
+# Local dev rig for the Mondoo TA + dashboard app.
+#
+# Bind-mounts the two app directories so edits to default/ pick up after a
+# `./dev.sh restart` without rebuilding.  See TESTING.md for the full workflow.
+# ---------------------------------------------------------------------------
+
+services:
+  splunk:
+    image: splunk/splunk:${SPLUNK_VERSION:-9.3}
+    #image: splunk/splunk:${SPLUNK_VERSION:-10.2}
+    # Splunk only publishes an amd64 manifest for splunk/splunk. On Apple
+    # Silicon / other ARM hosts this forces Docker to emulate (Rosetta on
+    # Docker Desktop, otherwise QEMU). Emulated boot is slower — give it more
+    # warm-up time below.  Override to linux/amd64 explicitly (or unset for
+    # native amd64 hosts) via the SPLUNK_PLATFORM env var.
+    platform: ${SPLUNK_PLATFORM:-linux/amd64}
+    container_name: ${SPLUNK_CONTAINER:-splunk-mondoo-dev}
+    environment:
+      SPLUNK_GENERAL_TERMS: --accept-sgt-current-at-splunk-com
+      SPLUNK_START_ARGS: --accept-license
+      SPLUNK_PASSWORD: "${SPLUNK_PASSWORD:-changeme123!}"
+      SPLUNK_LICENSE_URI: Free          # 500 MB/day dev license, 60 days
+    ports:
+      - "${SPLUNK_PORT:-8000}:8000"     # Splunk Web
+      - "${SPLUNK_MGMT_PORT:-8089}:8089" # Management REST
+    volumes:
+      - ./TA-mondoo:/opt/splunk/etc/apps/TA-mondoo:rw
+      - ./mondoo_app:/opt/splunk/etc/apps/mondoo_app:rw
+      - ./.etl-export:/opt/mondoo-etl/export:rw
+      - splunk-var:/opt/splunk/var
+    healthcheck:
+      test: ["CMD", "curl", "-fkSs", "https://localhost:8089/services/server/info"]
+      interval: 10s
+      timeout: 5s
+      retries: 90
+      start_period: 120s
+
+volumes:
+  splunk-var:
