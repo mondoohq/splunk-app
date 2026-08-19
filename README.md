@@ -309,6 +309,11 @@ the same version, so bump them together first:
 | `TA-mondoo/default/app.conf`, `mondoo_app/default/app.conf` | `[launcher] version`, `[id] version` |
 | `TA-mondoo/app.manifest`, `mondoo_app/app.manifest` | `info.id.version` |
 
+`./bump-version.sh X.Y.Z` sets all five fields at once and refreshes
+`[install] build`, which Splunk uses to decide whether an install is an
+upgrade. The release workflow rejects a build number that hasn't increased
+since the previous tag, so don't hand-edit the versions.
+
 Then add a dated `## [X.Y.Z] - YYYY-MM-DD` section to `CHANGELOG.md` — the
 release notes are generated from it — commit, and tag:
 

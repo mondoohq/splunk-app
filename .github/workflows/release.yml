@@ -28,6 +28,10 @@ jobs:
       version: ${{ steps.resolve.outputs.version }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Tags and history are needed to compare this release's build number
+          # against the previous tag's.
+          fetch-depth: 0
 
       - name: Resolve version
         id: resolve
@@ -82,6 +86,65 @@ jobs:
               )
               sys.exit(1)
           print(f"\nAll version fields agree on {want}.")
+          PY
+
+      - name: Check the build number was bumped
+        run: |
+          # Splunk uses [install] build to decide whether an install is an
+          # upgrade, so it must strictly increase between releases. Compare
+          # against the previous tag; on the first release there is nothing to
+          # compare against and the check is informational only.
+          git fetch --tags --quiet
+          prev=$(git tag -l 'v*' --sort=-v:refname | grep -v "^${GITHUB_REF_NAME}$" | head -1)
+          python - "$prev" <<'PY'
+          import re, subprocess, sys
+
+          prev = sys.argv[1].strip()
+
+          def build_of(app, ref=None):
+              path = f"{app}/default/app.conf"
+              if ref:
+                  text = subprocess.run(["git", "show", f"{ref}:{path}"],
+                                        capture_output=True, text=True).stdout
+              else:
+                  text = open(path).read()
+              m = re.search(r"(?m)^build\s*=\s*(\S+)", text)
+              return m.group(1) if m else None
+
+          failed = []
+          builds = {}
+          for app in ("TA-mondoo", "mondoo_app"):
+              cur = build_of(app)
+              if cur is None or not cur.isdigit():
+                  failed.append(f"{app}: [install] build is missing or not an integer ({cur!r})")
+                  continue
+              builds[app] = int(cur)
+              print(f"  {app}: build = {cur}")
+
+          if len(set(builds.values())) > 1:
+              failed.append(f"apps disagree on build number: {builds}")
+
+          if not prev:
+              print("\nNo previous tag - skipping the increase check (first release).")
+          else:
+              print(f"\nComparing against {prev}:")
+              for app, cur in builds.items():
+                  old = build_of(app, prev)
+                  print(f"  {app}: {old} -> {cur}")
+                  if old and old.isdigit() and cur <= int(old):
+                      failed.append(
+                          f"{app}: build {cur} is not greater than {prev}'s {old}. "
+                          f"Splunk will not treat this as an upgrade."
+                      )
+
+          if failed:
+              print("\nBuild number problem:", file=sys.stderr)
+              for f in failed:
+                  print(f"  - {f}", file=sys.stderr)
+              print("\nRun ./bump-version.sh <version> to set versions and build together.",
+                    file=sys.stderr)
+              sys.exit(1)
+          print("\nBuild numbers OK.")
           PY
 
       - name: Check CHANGELOG has a section for this version

@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with checksums. Tag pushes previously matched no workflow trigger at all.
 - `vet.sh --package-only`: packages without running AppInspect, so release
   artifacts and locally built ones come from the same code path.
+- `bump-version.sh`: sets the version across all five fields and refreshes
+  `[install] build` in one step. The release workflow now also rejects a build
+  number that has not increased since the previous tag — Splunk uses it to
+  decide whether an install is an upgrade, and it had been static since the
+  apps were created.
 
 ### Changed
 - `.github/workflows/ci.yml`: exposed via `workflow_call` so the release
