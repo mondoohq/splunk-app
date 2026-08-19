@@ -2,6 +2,8 @@
 
 A Splunk Technology Add-on (TA) that ingests security data from the [Mondoo](https://mondoo.com) platform. Data can be collected via the Mondoo GraphQL API (REST) or from file-based ETL exports.
 
+Source: <https://github.com/mondoohq/splunk-app>
+
 ## Apps
 
 This repository contains two Splunk apps:
@@ -103,7 +105,14 @@ Cloud stack itself.
 
 ## Installation
 
-1. **Download** the `TA-mondoo` directory (or package it as a `.tar.gz`/`.spl` file).
+1. **Download** the `TA-mondoo` directory (or package it as a `.tar.gz`/`.spl` file):
+
+   ```
+   git clone https://github.com/mondoohq/splunk-app.git
+   ```
+
+   Release packages are also published at
+   <https://github.com/mondoohq/splunk-app/releases>.
 
 2. **Copy** it into your Splunk apps directory:
 
@@ -327,3 +336,16 @@ c = MondooClient(**{k: creds[k] for k in ('token','api_endpoint','space_mrn')})
 print('OK' if c.validate() else 'FAIL')
 "
 ```
+
+## Support and contributing
+
+- **Issues / feature requests:** <https://github.com/mondoohq/splunk-app/issues>
+- **Pull requests:** <https://github.com/mondoohq/splunk-app/pulls>
+
+CI runs ruff, unit tests, app-file validation, `slim validate` and AppInspect
+on every pull request — see
+[.github/workflows/ci.yml](.github/workflows/ci.yml).
+
+## License
+
+Apache-2.0 — see [LICENSE](LICENSE).
