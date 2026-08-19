@@ -14,7 +14,7 @@
         "company": "Mondoo, Inc."
       }
     ],
-    "releaseDate": null,
+    "releaseDate": "2026-08-19",
     "description": "Splunk Technology Add-on for ingesting Mondoo audit, advisory, agent, asset, vulnerability, check, control, package and query data via the Mondoo GraphQL API and file-based ETL exports.",
     "classification": {
       "intendedAudience": "IT Ops",

@@ -151,17 +151,6 @@
 		}
 	},
 	"dataSources": {
-		"ds_TwUdxmDa": {
-			"type": "ds.search",
-			"options": {
-				"query": "| tstats count WHERE `sn_indexes`  by host",
-				"queryParameters": {
-					"earliest": "-24h@h",
-					"latest": "now"
-				}
-			},
-			"name": "host search"
-		},
 		"ds_aFJn3BWp": {
 			"type": "ds.search",
 			"options": {

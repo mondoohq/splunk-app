@@ -80,6 +80,12 @@ A file monitor ingests JSONL exports from the Mondoo ETL runner. Sourcetype rout
 - Splunk Enterprise 9.0 – 9.3
 - A Mondoo account with API credentials (service account JSON blob or raw JWT token)
 
+Both apps declare `requires_splunk_version = 9.0.0` in `app.conf`, which is
+what Splunk enforces at install time. `app.manifest` declares a looser
+`>=8.0.0` because the Splunk Packaging Toolkit (`slim validate`, a CI gate)
+ships a version list that predates 9.0 and rejects a 9.x floor. 9.0 – 9.3 is
+the range that is actually tested.
+
 ## Deployment topology
 
 The TA performs outbound polling from a single instance. Pick **one** of the

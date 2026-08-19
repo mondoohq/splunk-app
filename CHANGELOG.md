@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [1.0.0] - 2026-08-19
+
+Initial release.
+
 ### Added
 - `LICENSE` and per-app LICENSE copies (Apache-2.0).
 - `mondoo_app/app.manifest` with dependency on `TA-mondoo` and CIM mappings.
@@ -21,10 +27,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - Committed `.DS_Store`.
 - Stray file `mondoo mark.svg` (renamed to `mondoo_mark.svg`).
-
-## [1.0.0] - 2025-XX-XX
-
-Initial release.
 
 [Unreleased]: https://github.com/mondoohq/splunk-app/compare/v1.0.0...HEAD
 [1.0.0]: https://github.com/mondoohq/splunk-app/releases/tag/v1.0.0

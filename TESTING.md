@@ -155,6 +155,13 @@ That command runs three sanity checks in order:
 If any block returns zero rows when you know there's data in the raw index,
 the field aliases or tag mappings are wrong.
 
+**Check 3 needs the Splunk Common Information Model add-on.** The rig does
+not install `Splunk_SA_CIM`, so on a stock `./dev.sh up` those two searches
+fail with *"Data model 'Vulnerabilities' was not found"* — that is the
+missing add-on, not a mapping bug. Install the CIM add-on into the container
+first if you want to exercise the data models; checks 1 and 2 (tag matching)
+and the field-extraction block are meaningful without it.
+
 ### Phase 6 — Negative tests
 
 These catch problems that the happy path won't show.

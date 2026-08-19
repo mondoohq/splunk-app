@@ -281,11 +281,8 @@ jobs:
 
       - name: Run AppInspect (${{ matrix.mode }})
         id: appinspect
-        # Cloud mode currently reports known issues (plaintext secrets,
-        # https://github.com/mondoohq/splunk-app/issues/1) — keep it
-        # non-blocking until the storage/passwords refactor lands.
-        # precert is the blocking gate.
-        continue-on-error: ${{ matrix.mode == 'cloud' }}
+        # Both modes are blocking gates: as of 1.0.0 precert and cloud each
+        # report zero failures and zero errors for both apps.
         run: |
           set +e
           if [ "${{ matrix.mode }}" = "cloud" ]; then

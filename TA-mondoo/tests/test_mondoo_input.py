@@ -11,10 +11,11 @@ Usage
   # Run all tests:
   python test_mondoo_input.py
 
-  # Run only live API tests (requires TOKEN env var or hardcoded token):
+  # Run only live API tests (requires the MONDOO_TOKEN env var):
   python test_mondoo_input.py live
 
-The test token is pre-configured for the eu-example-space-000000 space.
+The offline unit tests use a synthetic sample token; the live tests read a
+real one from the MONDOO_TOKEN environment variable.
 """
 
 import json
@@ -34,22 +35,26 @@ if _bin_dir not in sys.path:
 from mondoo_api import MondooClient, parse_config_blob, _agents_mrn_to_captain  # noqa: E402
 
 # ---------------------------------------------------------------------------
-# Test credentials (EU space, token-based service account)
+# Sample credentials for the offline unit tests.
+#
+# SAMPLE_TOKEN is a synthetic, unsigned JWT — it is structurally valid so
+# parse_config_blob() can be exercised, but it authenticates nothing. Never
+# commit a real service-account token here; the live tests below read one
+# from the MONDOO_TOKEN environment variable instead.
 # ---------------------------------------------------------------------------
-TEST_TOKEN = (
-    "eyJhbGciOiJFUzM4NCIsImtpZCI6Ii8vYWdlbnRzLmFwaS5tb25kb28uYXBwL3NwYWNlcy"
-    "9ldS1leGFtcGxlLXNwYWNlLTAwMDAwMC9zZXJ2aWNlYWNjb3VudHMvMDAwMDAwMDAwMDAw"
-    "MDAwMDAwMDAwMDAwMCIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MDAwMDAwMDAsImlzcyI6I"
-    "m1vbmRvby9hbXMiLCJuYmYiOjE3MDAwMDAwMDAsInN1YiI6Ii8vYWdlbnRzLmFwaS5tb25"
-    "kb28uYXBwL3NwYWNlcy9ldS1leGFtcGxlLXNwYWNlLTAwMDAwMC9zZXJ2aWNlYWNjb3Vud"
-    "HMvMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMCJ9.AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+SAMPLE_TOKEN = (
+    "eyJhbGciOiJFUzM4NCIsImtpZCI6Ii8vYWdlbnRzLmFwaS5tb25kb28uYXBwL3NwYWNlcy9ldS1leGFtcGxlLXNw"
+    "YWNlLTAwMDAwMC9zZXJ2aWNlYWNjb3VudHMvMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMCIsInR5cCI6IkpXVCJ9"
+    ".eyJpYXQiOjE3MDAwMDAwMDAsImlzcyI6Im1vbmRvby9hbXMiLCJuYmYiOjE3MDAwMDAwMDAsInN1YiI6Ii8vYWd"
+    "lbnRzLmFwaS5tb25kb28uYXBwL3NwYWNlcy9ldS1leGFtcGxlLXNwYWNlLTAwMDAwMC9zZXJ2aWNlYWNjb3VudHM"
+    "vMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMCJ9.AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
 )
-TEST_API_ENDPOINT = "https://eu.api.mondoo.com"
+TEST_API_ENDPOINT = os.environ.get("MONDOO_API_ENDPOINT", "https://eu.api.mondoo.com")
 TEST_SPACE_MRN = "//captain.api.mondoo.app/spaces/eu-example-space-000000"
 
-# Allow override via environment variable
-TOKEN = os.environ.get("MONDOO_TOKEN", TEST_TOKEN)
+# Live tests require a real token supplied out-of-band.
+TOKEN = os.environ.get("MONDOO_TOKEN")
 
 
 # ===========================================================================
@@ -58,25 +63,25 @@ TOKEN = os.environ.get("MONDOO_TOKEN", TEST_TOKEN)
 
 class TestParseBlobUnit(unittest.TestCase):
     def test_raw_jwt(self):
-        creds = parse_config_blob(TEST_TOKEN)
-        self.assertEqual(creds["token"], TEST_TOKEN)
+        creds = parse_config_blob(SAMPLE_TOKEN)
+        self.assertEqual(creds["token"], SAMPLE_TOKEN)
         self.assertIn("eu.api.mondoo.com", creds["api_endpoint"])
         self.assertEqual(creds["space_mrn"], TEST_SPACE_MRN)
 
     def test_json_blob_with_token_field(self):
         blob = json.dumps({
-            "token": TEST_TOKEN,
+            "token": SAMPLE_TOKEN,
             "api_endpoint": "https://eu.api.mondoo.com",
             "space_mrn": TEST_SPACE_MRN,
         })
         creds = parse_config_blob(blob)
-        self.assertEqual(creds["token"], TEST_TOKEN)
+        self.assertEqual(creds["token"], SAMPLE_TOKEN)
         self.assertEqual(creds["api_endpoint"], "https://eu.api.mondoo.com")
         self.assertEqual(creds["space_mrn"], TEST_SPACE_MRN)
 
     def test_json_blob_with_mrn_field(self):
         blob = json.dumps({
-            "token": TEST_TOKEN,
+            "token": SAMPLE_TOKEN,
             "api_endpoint": "https://eu.api.mondoo.com",
             "mrn": "//agents.api.mondoo.app/spaces/eu-example-space-000000/serviceaccounts/abc",
         })
@@ -110,8 +115,15 @@ class TestParseBlobUnit(unittest.TestCase):
 # Integration tests – require live API access
 # ===========================================================================
 
+@unittest.skipUnless(
+    TOKEN, "MONDOO_TOKEN is not set - skipping live Mondoo API integration tests"
+)
 class TestMondooAPILive(unittest.TestCase):
-    """Live integration tests against the Mondoo EU API."""
+    """Live integration tests against the Mondoo API.
+
+    Supply credentials out-of-band:
+        MONDOO_TOKEN=<jwt> python test_mondoo_input.py
+    """
 
     @classmethod
     def setUpClass(cls):
@@ -300,6 +312,10 @@ class TestMondooAPILive(unittest.TestCase):
 
 def print_live_sample():
     """Quick smoke-test: print a few raw audit log events to stdout."""
+    if not TOKEN:
+        print("MONDOO_TOKEN is not set - cannot run the live smoke test.")
+        print("Usage: MONDOO_TOKEN=<jwt> python test_mondoo_input.py live")
+        raise SystemExit(1)
     print("=" * 60)
     print("Mondoo TA – Live API Smoke Test")
     print("=" * 60)

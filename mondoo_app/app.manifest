@@ -14,7 +14,7 @@
         "company": "Mondoo, Inc."
       }
     ],
-    "releaseDate": null,
+    "releaseDate": "2026-08-19",
     "description": "Dashboards and visualizations for Mondoo security data ingested by the Mondoo Technology Add-on (TA-mondoo). Provides views for assets, vulnerabilities, checks, queries, audit activity and data quality.",
     "classification": {
       "intendedAudience": "IT Ops",
