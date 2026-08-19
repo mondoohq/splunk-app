@@ -5,6 +5,9 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  # Lets release.yml run this exact pipeline against a tagged commit rather
+  # than trusting main's last run or duplicating the jobs.
+  workflow_call:
 
 # Cancel superseded runs on the same PR / branch.
 concurrency:

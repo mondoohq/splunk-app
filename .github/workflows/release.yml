@@ -1,0 +1,228 @@
+name: Release
+
+# Tag pushes match none of ci.yml's triggers, so without this workflow a
+# `git push origin v1.0.0` would run no checks at all.
+on:
+  push:
+    tags: ["v*"]
+  # Dry run: builds and verifies everything, publishes nothing.
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to rehearse, without the leading v (e.g. 1.0.0)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # A version bump has to move five fields across four files. CI already checks
+  # app.manifest against app.conf, but nothing checks either against the tag,
+  # so a mistyped tag would otherwise ship as a valid release.
+  # ---------------------------------------------------------------------------
+  verify-version:
+    name: Verify version consistency
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.resolve.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve version
+        id: resolve
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            version="${{ github.event.inputs.version }}"
+          else
+            version="${GITHUB_REF_NAME#v}"
+          fi
+          if ! printf '%s' "$version" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::'$version' is not semver (expected a tag like v1.2.3)"
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Releasing version $version"
+
+      - name: Check app.conf and app.manifest agree with the tag
+        run: |
+          python - "${{ steps.resolve.outputs.version }}" <<'PY'
+          import json, pathlib, re, sys
+
+          want = sys.argv[1]
+          failed = []
+
+          for app in ("TA-mondoo", "mondoo_app"):
+              conf = pathlib.Path(app) / "default" / "app.conf"
+              text = conf.read_text()
+              # [launcher] version and [id] version must BOTH match.
+              found = re.findall(r"(?m)^version\s*=\s*(\S+)", text)
+              if not found:
+                  failed.append(f"{conf}: no version key")
+              for got in found:
+                  if got != want:
+                      failed.append(f"{conf}: version = {got}, tag says {want}")
+
+              man = pathlib.Path(app) / "app.manifest"
+              got = json.loads(man.read_text())["info"]["id"]["version"]
+              if got != want:
+                  failed.append(f"{man}: info.id.version = {got}, tag says {want}")
+
+              print(f"  {app}: app.conf {sorted(set(found))}, manifest {got}")
+
+          if failed:
+              print("\nVersion mismatch:", file=sys.stderr)
+              for f in failed:
+                  print(f"  - {f}", file=sys.stderr)
+              print(
+                  "\nBump every field, commit, then retag. Fields to change:\n"
+                  "  <app>/default/app.conf   [launcher] version and [id] version\n"
+                  "  <app>/app.manifest       info.id.version",
+                  file=sys.stderr,
+              )
+              sys.exit(1)
+          print(f"\nAll version fields agree on {want}.")
+          PY
+
+      - name: Check CHANGELOG has a section for this version
+        run: |
+          version="${{ steps.resolve.outputs.version }}"
+          if ! grep -qE "^## \[$version\] - [0-9]{4}-[0-9]{2}-[0-9]{2}$" CHANGELOG.md; then
+            echo "::error::CHANGELOG.md has no dated '## [$version] - YYYY-MM-DD' section."
+            echo "The release notes are generated from it, so it must exist."
+            exit 1
+          fi
+          echo "Found CHANGELOG section for $version."
+
+  # ---------------------------------------------------------------------------
+  # Run the full pipeline against the tagged commit. Reused from ci.yml rather
+  # than copied, so the release can never drift from what PRs are checked with.
+  # ---------------------------------------------------------------------------
+  gates:
+    name: CI gates
+    needs: [verify-version]
+    uses: ./.github/workflows/ci.yml
+
+  # ---------------------------------------------------------------------------
+  # Packaging goes through vet.sh --package-only so release artifacts and
+  # locally built ones come out of the same exclude list and the same tar
+  # invocation. Do not inline a tar command here.
+  # ---------------------------------------------------------------------------
+  package:
+    name: Package release artifacts
+    needs: [verify-version, gates]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build tarballs
+        run: ./vet.sh --package-only
+
+      - name: Name artifacts with the version and checksum them
+        id: artifacts
+        run: |
+          version="${{ needs.verify-version.outputs.version }}"
+          mkdir -p dist
+          for app in TA-mondoo mondoo_app; do
+            # .tgz is what Splunkbase expects on upload.
+            cp "build/${app}.tar.gz" "dist/${app}-${version}.tgz"
+          done
+          cd dist
+          sha256sum ./*.tgz | sed 's| \./| |' > SHA256SUMS
+          echo "--- artifacts ---"
+          ls -lh
+          echo "--- SHA256SUMS ---"
+          cat SHA256SUMS
+
+      - name: Verify the packages contain no dev or secret material
+        run: |
+          version="${{ needs.verify-version.outputs.version }}"
+          fail=0
+          for app in TA-mondoo mondoo_app; do
+            listing=$(tar tzf "dist/${app}-${version}.tgz")
+            echo "::group::${app}-${version}.tgz"
+            echo "$listing"
+            echo "::endgroup::"
+            # local/ holds per-instance overrides and is where dev.sh writes
+            # real credentials; tests/ ships nothing useful to an operator.
+            if printf '%s' "$listing" | grep -qE "/(local|tests)/|/local\.meta|\.pyc$|__pycache__|\.DS_Store"; then
+              echo "::error::${app}-${version}.tgz contains excluded material"
+              fail=1
+            fi
+          done
+          # Belt and braces: no base64-encoded JSON header (the start of a JWT)
+          # in any shipped file. Deliberately broad - tests/ is excluded from
+          # packages, so a token-shaped string should never appear here at all.
+          mkdir -p /tmp/unpacked && tar xzf "dist/TA-mondoo-${version}.tgz" -C /tmp/unpacked
+          tar xzf "dist/mondoo_app-${version}.tgz" -C /tmp/unpacked
+          if grep -rIqE "eyJ[A-Za-z0-9_-]{20,}" /tmp/unpacked; then
+            echo "::error::A JWT-shaped string is present in a release package"
+            grep -rIlE "eyJ[A-Za-z0-9_-]{20,}" /tmp/unpacked
+            fail=1
+          fi
+          [ "$fail" -eq 0 ] && echo "Packages are clean."
+          exit $fail
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ needs.verify-version.outputs.version }}
+          path: dist/
+          retention-days: 90
+
+  # ---------------------------------------------------------------------------
+  # Publish. Skipped on workflow_dispatch so a dry run exercises every check
+  # above without creating a release.
+  # ---------------------------------------------------------------------------
+  publish:
+    name: Publish GitHub release
+    needs: [verify-version, package]
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-${{ needs.verify-version.outputs.version }}
+          path: dist
+
+      - name: Extract release notes from CHANGELOG
+        run: |
+          python - "${{ needs.verify-version.outputs.version }}" <<'PY'
+          import pathlib, re, sys
+
+          version = sys.argv[1]
+          text = pathlib.Path("CHANGELOG.md").read_text()
+          # Everything between this version's heading and the next one.
+          m = re.search(
+              rf"^## \[{re.escape(version)}\] - \d{{4}}-\d{{2}}-\d{{2}}$(.*?)(?=^## |\Z)",
+              text, re.S | re.M,
+          )
+          body = m.group(1).strip() if m else ""
+          if not body:
+              sys.exit(f"No release notes found for {version}")
+          pathlib.Path("RELEASE_NOTES.md").write_text(
+              body
+              + "\n\n## Installation\n\n"
+              + "Download the `.tgz` for the app you need and install it with\n"
+              + "**Apps > Manage Apps > Install app from file**, or unpack it into\n"
+              + "`$SPLUNK_HOME/etc/apps/`. Verify downloads against `SHA256SUMS`.\n\n"
+              + "See the [README](https://github.com/mondoohq/splunk-app#installation)\n"
+              + "for deployment topology and configuration.\n"
+          )
+          print(body)
+          PY
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            --title "Mondoo Splunk apps ${{ needs.verify-version.outputs.version }}" \
+            --notes-file RELEASE_NOTES.md \
+            dist/*.tgz dist/SHA256SUMS
+
+      - name: Remind about Splunkbase
+        run: |
+          echo "::notice::Splunkbase has no publish API - upload the .tgz files"
+          echo "::notice::manually at https://splunkbase.splunk.com/ if you list there."

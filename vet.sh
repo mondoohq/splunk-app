@@ -3,9 +3,13 @@
 #
 # Usage:
 #   ./vet.sh                  Package + vet both apps
+#   ./vet.sh --package-only   Package both apps, skip AppInspect
 #   ./vet.sh --dry-run        Only show what would be packaged
 #   ./vet.sh --list-excludes  Show the exclude patterns and exit
 #   ./vet.sh --help           Show this help
+#
+# --package-only is what the release workflow calls, so release artifacts and
+# locally built ones come out of exactly the same code path.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -30,6 +34,7 @@ EXCLUDES=(
 )
 
 DRY_RUN=0
+PACKAGE_ONLY=0
 case "${1:-}" in
     --help|-h)
         sed -n '2,8p' "$0" | sed 's/^# \{0,1\}//'
@@ -43,6 +48,10 @@ case "${1:-}" in
         DRY_RUN=1
         shift
         ;;
+    --package-only)
+        PACKAGE_ONLY=1
+        shift
+        ;;
 esac
 
 # Build the rolling --exclude='...' flag list once.
@@ -52,7 +61,7 @@ for pat in "${EXCLUDES[@]}"; do
 done
 
 # ── Ensure splunk-appinspect is available ────────────────────────────
-if [ "$DRY_RUN" -eq 0 ] && ! command -v splunk-appinspect &>/dev/null; then
+if [ "$DRY_RUN" -eq 0 ] && [ "$PACKAGE_ONLY" -eq 0 ] && ! command -v splunk-appinspect &>/dev/null; then
     echo "splunk-appinspect not found. Installing via pip..."
     pip3 install splunk-appinspect
 fi
@@ -87,6 +96,10 @@ for APP in "${APPS[@]}"; do
     COPYFILE_DISABLE=1 tar czf "$TARBALL" "${TAR_EXCLUDES[@]}" -C "$SCRIPT_DIR" "$APP"
 
     echo "  Created: $TARBALL"
+
+    if [ "$PACKAGE_ONLY" -eq 1 ]; then
+        continue
+    fi
 
     echo ""
     echo "================================================================"

@@ -298,6 +298,39 @@ Restart Splunk afterwards:
 ssh "$SPLUNK_HOST" sudo /opt/splunk/bin/splunk restart
 ```
 
+### Cutting a release
+
+Releases are driven by tags. `.github/workflows/release.yml` refuses to publish
+unless the tag, both `app.conf` files and both `app.manifest` files all agree on
+the same version, so bump them together first:
+
+| File | Fields |
+|------|--------|
+| `TA-mondoo/default/app.conf`, `mondoo_app/default/app.conf` | `[launcher] version`, `[id] version` |
+| `TA-mondoo/app.manifest`, `mondoo_app/app.manifest` | `info.id.version` |
+
+Then add a dated `## [X.Y.Z] - YYYY-MM-DD` section to `CHANGELOG.md` — the
+release notes are generated from it — commit, and tag:
+
+```bash
+git tag -a v1.0.0 -m "Mondoo Splunk apps 1.0.0"
+git push origin v1.0.0
+```
+
+The workflow re-runs the full CI pipeline against the tagged commit, packages
+both apps via `./vet.sh --package-only`, checks the packages contain no
+`local/`, `tests/` or token-shaped strings, and publishes a GitHub release with
+`TA-mondoo-X.Y.Z.tgz`, `mondoo_app-X.Y.Z.tgz` and `SHA256SUMS`.
+
+Rehearse without publishing at any time:
+
+```bash
+gh workflow run Release -f version=1.0.0
+```
+
+Splunkbase has no publish API — if you list there, upload the `.tgz` files
+manually after the release lands.
+
 ## Troubleshooting
 
 ### The input doesn't appear after install

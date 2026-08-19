@@ -7,7 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+- `.github/workflows/release.yml`: tag-driven release pipeline. Verifies the tag
+  against both `app.conf` files and both `app.manifest` files, re-runs the CI
+  gates against the tagged commit, packages both apps, checks the packages for
+  `local/`, `tests/` and token-shaped strings, and publishes a GitHub release
+  with checksums. Tag pushes previously matched no workflow trigger at all.
+- `vet.sh --package-only`: packages without running AppInspect, so release
+  artifacts and locally built ones come from the same code path.
+
+### Changed
+- `.github/workflows/ci.yml`: exposed via `workflow_call` so the release
+  workflow reuses the pipeline instead of duplicating it.
 
 ## [1.0.0] - 2026-08-19
 
