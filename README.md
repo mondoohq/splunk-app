@@ -381,6 +381,17 @@ print('OK' if c.validate() else 'FAIL')
 "
 ```
 
+## Acknowledgments
+
+These apps were developed with substantial help from
+[Netdescribe](https://www.netdescribe.com):
+
+- **Alexander Skripnik** — Netdescribe
+- **Ilker Duman** — Netdescribe
+
+Thank you both for the Splunk expertise, dashboard work and testing that
+shaped this integration.
+
 ## Support and contributing
 
 - **Issues / feature requests:** <https://github.com/mondoohq/splunk-app/issues>

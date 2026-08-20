@@ -24,6 +24,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - `.github/workflows/ci.yml`: exposed via `workflow_call` so the release
   workflow reuses the pipeline instead of duplicating it.
+- `README.md`: added an Acknowledgments section crediting Alexander Skripnik
+  and Ilker Duman of Netdescribe, whose work on these apps landed inside the
+  squashed initial commit and so is not visible in the git history.
 
 ## [1.0.0] - 2026-08-19
 
