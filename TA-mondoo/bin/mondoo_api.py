@@ -50,10 +50,12 @@ def _redact_blob(text: str) -> str:
         return text
     # Strip Bearer tokens
     import re
+
     text = re.sub(r"(Bearer\s+)[A-Za-z0-9._\-]+", r"\1****", text)
     text = re.sub(r'("token"\s*:\s*")[^"]+(")', r"\1****\2", text)
     text = re.sub(r"\beyJ[A-Za-z0-9._\-]+", "eyJ****", text)
     return text
+
 
 # ---------------------------------------------------------------------------
 # GraphQL queries
@@ -525,7 +527,10 @@ class MondooClient:
                     retry_after = self._compute_retry_after(exc, attempt)
                     logger.warning(
                         "Mondoo API HTTP %s on attempt %d/%d — retrying in %.1fs",
-                        exc.code, attempt + 1, _MAX_RETRIES + 1, retry_after,
+                        exc.code,
+                        attempt + 1,
+                        _MAX_RETRIES + 1,
+                        retry_after,
                     )
                     time.sleep(retry_after)
                     last_error = exc
@@ -538,7 +543,10 @@ class MondooClient:
                     retry_after = self._backoff_seconds(attempt)
                     logger.warning(
                         "Mondoo API connection error on attempt %d/%d (%s) — retrying in %.1fs",
-                        attempt + 1, _MAX_RETRIES + 1, exc.reason, retry_after,
+                        attempt + 1,
+                        _MAX_RETRIES + 1,
+                        exc.reason,
+                        retry_after,
                     )
                     time.sleep(retry_after)
                     last_error = exc
@@ -558,7 +566,7 @@ class MondooClient:
     @staticmethod
     def _backoff_seconds(attempt: int) -> float:
         """Exponential backoff with full jitter."""
-        base = min(_BACKOFF_MAX_SECONDS, _INITIAL_BACKOFF_SECONDS * (_BACKOFF_FACTOR ** attempt))
+        base = min(_BACKOFF_MAX_SECONDS, _INITIAL_BACKOFF_SECONDS * (_BACKOFF_FACTOR**attempt))
         return random.uniform(0, base)
 
     @classmethod

@@ -61,6 +61,7 @@ TOKEN = os.environ.get("MONDOO_TOKEN")
 # Unit tests – no network required
 # ===========================================================================
 
+
 class TestParseBlobUnit(unittest.TestCase):
     def test_raw_jwt(self):
         creds = parse_config_blob(SAMPLE_TOKEN)
@@ -69,31 +70,37 @@ class TestParseBlobUnit(unittest.TestCase):
         self.assertEqual(creds["space_mrn"], TEST_SPACE_MRN)
 
     def test_json_blob_with_token_field(self):
-        blob = json.dumps({
-            "token": SAMPLE_TOKEN,
-            "api_endpoint": "https://eu.api.mondoo.com",
-            "space_mrn": TEST_SPACE_MRN,
-        })
+        blob = json.dumps(
+            {
+                "token": SAMPLE_TOKEN,
+                "api_endpoint": "https://eu.api.mondoo.com",
+                "space_mrn": TEST_SPACE_MRN,
+            }
+        )
         creds = parse_config_blob(blob)
         self.assertEqual(creds["token"], SAMPLE_TOKEN)
         self.assertEqual(creds["api_endpoint"], "https://eu.api.mondoo.com")
         self.assertEqual(creds["space_mrn"], TEST_SPACE_MRN)
 
     def test_json_blob_with_mrn_field(self):
-        blob = json.dumps({
-            "token": SAMPLE_TOKEN,
-            "api_endpoint": "https://eu.api.mondoo.com",
-            "mrn": "//agents.api.mondoo.app/spaces/eu-example-space-000000/serviceaccounts/abc",
-        })
+        blob = json.dumps(
+            {
+                "token": SAMPLE_TOKEN,
+                "api_endpoint": "https://eu.api.mondoo.com",
+                "mrn": "//agents.api.mondoo.app/spaces/eu-example-space-000000/serviceaccounts/abc",
+            }
+        )
         creds = parse_config_blob(blob)
         self.assertEqual(creds["space_mrn"], TEST_SPACE_MRN)
 
     def test_json_blob_strips_query_path(self):
-        blob = json.dumps({
-            "token": "tok",
-            "api_endpoint": "https://eu.api.mondoo.com/query",
-            "space_mrn": TEST_SPACE_MRN,
-        })
+        blob = json.dumps(
+            {
+                "token": "tok",
+                "api_endpoint": "https://eu.api.mondoo.com/query",
+                "space_mrn": TEST_SPACE_MRN,
+            }
+        )
         creds = parse_config_blob(blob)
         self.assertEqual(creds["api_endpoint"], "https://eu.api.mondoo.com")
 
@@ -115,9 +122,8 @@ class TestParseBlobUnit(unittest.TestCase):
 # Integration tests – require live API access
 # ===========================================================================
 
-@unittest.skipUnless(
-    TOKEN, "MONDOO_TOKEN is not set - skipping live Mondoo API integration tests"
-)
+
+@unittest.skipUnless(TOKEN, "MONDOO_TOKEN is not set - skipping live Mondoo API integration tests")
 class TestMondooAPILive(unittest.TestCase):
     """Live integration tests against the Mondoo API.
 
@@ -310,6 +316,7 @@ class TestMondooAPILive(unittest.TestCase):
 # CLI helpers
 # ===========================================================================
 
+
 def print_live_sample():
     """Quick smoke-test: print a few raw audit log events to stdout."""
     if not TOKEN:
@@ -342,10 +349,7 @@ def print_live_sample():
     count = 0
     for node in client.fetch_audit_logs():
         identity = node.get("identity") or {}
-        print(
-            f"  [{node.get('timestamp', 'N/A')}] "
-            f"{identity.get('name', '?')} → {node.get('action', '?')}"
-        )
+        print(f"  [{node.get('timestamp', 'N/A')}] {identity.get('name', '?')} → {node.get('action', '?')}")
         print(f"    resource : {node.get('resource', 'N/A')}")
         print(f"    msg      : {node.get('msg', 'N/A')}")
         print()

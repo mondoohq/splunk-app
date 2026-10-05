@@ -133,6 +133,7 @@ _MAX_LOOKBACK_DAYS = 365
 # XML helpers
 # ---------------------------------------------------------------------------
 
+
 def _xml_text(element: Optional[ET.Element]) -> str:
     return (element.text or "").strip() if element is not None else ""
 
@@ -159,6 +160,7 @@ def parse_input_config(xml_str: str) -> dict:
 # ---------------------------------------------------------------------------
 # Checkpoint helpers
 # ---------------------------------------------------------------------------
+
 
 def _checkpoint_path(checkpoint_dir: str, stanza_name: str, log_type: str) -> str:
     safe = stanza_name.replace("/", "_").replace(":", "_").replace(" ", "_")
@@ -194,6 +196,7 @@ def save_checkpoint(checkpoint_dir: str, stanza_name: str, log_type: str, data: 
 # ---------------------------------------------------------------------------
 # Event output helpers
 # ---------------------------------------------------------------------------
+
 
 def _write_event_stream_open():
     sys.stdout.write("<stream>")
@@ -272,6 +275,7 @@ def emit_event(
 # Generic ingestion helper
 # ---------------------------------------------------------------------------
 
+
 def _ingest_generic(
     fetcher,
     log_type: str,
@@ -335,6 +339,7 @@ def _ingest_generic(
 # Per-log-type ingestion
 # ---------------------------------------------------------------------------
 
+
 def _flatten_audit(raw: dict) -> dict:
     identity = raw.pop("identity", {}) or {}
     raw["identity_name"] = identity.get("name", "")
@@ -363,8 +368,7 @@ def _flatten_asset(raw: dict) -> dict:
     risk_factors = raw.pop("riskFactors", []) or []
     if risk_factors:
         raw["risk_factors"] = [
-            {"mrn": rf.get("mrn", ""), "title": rf.get("title", ""),
-             "isPositive": rf.get("isPositive")}
+            {"mrn": rf.get("mrn", ""), "title": rf.get("title", ""), "isPositive": rf.get("isPositive")}
             for rf in risk_factors
         ]
     return raw
@@ -385,9 +389,13 @@ def _flatten_finding(raw: dict) -> dict:
     risk_factors = raw.pop("riskFactors", []) or []
     if risk_factors:
         raw["risk_factors"] = [
-            {"mrn": rf.get("mrn", ""), "indicator": rf.get("indicator"),
-             "title": rf.get("title", ""), "isPositive": rf.get("isPositive"),
-             "magnitude": rf.get("magnitude")}
+            {
+                "mrn": rf.get("mrn", ""),
+                "indicator": rf.get("indicator"),
+                "title": rf.get("title", ""),
+                "isPositive": rf.get("isPositive"),
+                "magnitude": rf.get("magnitude"),
+            }
             for rf in risk_factors
         ]
     # Rename fields to match ETL convention
@@ -415,8 +423,12 @@ def _flatten_check_score(raw: dict) -> dict:
     risk_factors = raw.pop("riskFactors", []) or []
     if risk_factors:
         raw["risk_factors"] = [
-            {"mrn": rf.get("mrn", ""), "indicator": rf.get("indicator"),
-             "title": rf.get("title", ""), "isPositive": rf.get("isPositive")}
+            {
+                "mrn": rf.get("mrn", ""),
+                "indicator": rf.get("indicator"),
+                "title": rf.get("title", ""),
+                "isPositive": rf.get("isPositive"),
+            }
             for rf in risk_factors
         ]
     # Rename mrn → query_mrn to match ETL convention
@@ -471,7 +483,8 @@ def ingest_audit_logs(client, stanza_name, params, checkpoint_dir, index):
         except ValueError:
             logger.warning(
                 "Invalid initial_lookback_days %r for %s — defaulting to 7",
-                params.get("initial_lookback_days"), stanza_name,
+                params.get("initial_lookback_days"),
+                stanza_name,
             )
             lookback_days = 7
         if lookback_days < 0:
@@ -483,7 +496,9 @@ def ingest_audit_logs(client, stanza_name, params, checkpoint_dir, index):
         elif lookback_days > _MAX_LOOKBACK_DAYS:
             logger.warning(
                 "initial_lookback_days %d for %s exceeds cap %d — clamping",
-                lookback_days, stanza_name, _MAX_LOOKBACK_DAYS,
+                lookback_days,
+                stanza_name,
+                _MAX_LOOKBACK_DAYS,
             )
             lookback_days = _MAX_LOOKBACK_DAYS
         if lookback_days > 0:
@@ -631,6 +646,7 @@ def ingest_agents(client, stanza_name, checkpoint_dir, index):
 # ---------------------------------------------------------------------------
 # Main entrypoint
 # ---------------------------------------------------------------------------
+
 
 def run_scheme():
     sys.stdout.write(SCHEME)

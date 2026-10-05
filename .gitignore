@@ -33,3 +33,6 @@ dist/
 # Local dev rig (docker-compose + dev.sh)
 .etl-export/
 .env
+
+# Local xgrep scan state (findings cache, triage verdicts)
+.xgrep/

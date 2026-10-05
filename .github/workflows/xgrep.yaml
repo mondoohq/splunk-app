@@ -1,0 +1,74 @@
+name: xgrep
+
+# xgrep is the one scanner for everything that is not Python style (ruff) or
+# workflow syntax (actionlint): security and secrets across all files,
+# GitHub Actions workflow security, and shell-script correctness.
+#
+# `xgrep ci` is diff-aware: on a pull request it reports findings on changed
+# lines only; on a push to main it scans the full tree.
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+jobs:
+  security:
+    name: xgrep security scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write # required to upload SARIF to code scanning
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0 # required for diff-aware scanning on pull requests
+          persist-credentials: false
+      - name: Run xgrep
+        uses: mondoohq/actions/xgrep@c38cfdf99da709760f58ff35aa5608688657f2f7 # v13.3.0
+        with:
+          path: .
+          output-file: results.sarif
+          sarif-category: xgrep
+          fail-on: "off" # report-only for now; findings land in the Security tab
+      - name: Upload SARIF results
+        if: always()
+        uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        with:
+          sarif_file: results.sarif
+          category: xgrep
+
+  shell:
+    name: xgrep shell lint
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write # required to upload SARIF to code scanning
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0 # required for diff-aware scanning on pull requests
+          persist-credentials: false
+      - name: Run xgrep
+        uses: mondoohq/actions/xgrep@c38cfdf99da709760f58ff35aa5608688657f2f7 # v13.3.0
+        with:
+          path: .
+          output-file: shell.sarif
+          sarif-category: xgrep-shell
+          # Replaces shellcheck. Scoped to *.sh: the same categories also cover
+          # Python and JS, but ruff owns Python linting and the JS rules are
+          # noisy on dashboard.js today.
+          fail-on: warning
+          args: "--category correctness,best-practice --include '*.sh'"
+      - name: Upload SARIF results
+        if: always()
+        uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        with:
+          sarif_file: shell.sarif
+          category: xgrep-shell

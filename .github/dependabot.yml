@@ -1,0 +1,17 @@
+version: 2
+updates:
+  # The TA is stdlib-only, so GitHub Actions are the only dependencies. Every
+  # action is pinned to a commit SHA with a `# vX.Y.Z` comment; Dependabot
+  # updates both together.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      # One PR per week instead of one per action. This also keeps
+      # upload-artifact / download-artifact on matching releases.
+      github-actions:
+        patterns:
+          - "*"

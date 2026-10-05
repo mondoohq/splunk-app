@@ -12,8 +12,9 @@ on:
         description: "Version to rehearse, without the leading v (e.g. 1.0.0)"
         required: true
 
+# Read-only by default; only the publish job gets write access.
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   # ---------------------------------------------------------------------------
@@ -27,17 +28,22 @@ jobs:
     outputs:
       version: ${{ steps.resolve.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
+          persist-credentials: false
           # Tags and history are needed to compare this release's build number
           # against the previous tag's.
           fetch-depth: 0
 
       - name: Resolve version
         id: resolve
+        # The dispatch input goes through env rather than ${{ }} so it is never
+        # spliced into the script as code.
+        env:
+          INPUT_VERSION: ${{ github.event.inputs.version }}
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            version="${{ github.event.inputs.version }}"
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            version="${INPUT_VERSION}"
           else
             version="${GITHUB_REF_NAME#v}"
           fi
@@ -185,7 +191,9 @@ jobs:
     needs: [verify-version, gates]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Build tarballs
         run: ./vet.sh --package-only
@@ -235,7 +243,7 @@ jobs:
           [ "$fail" -eq 0 ] && echo "Packages are clean."
           exit $fail
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: release-${{ needs.verify-version.outputs.version }}
           path: dist/
@@ -250,10 +258,14 @@ jobs:
     needs: [verify-version, package]
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # gh release create
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: release-${{ needs.verify-version.outputs.version }}
           path: dist
