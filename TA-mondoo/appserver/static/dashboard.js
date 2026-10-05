@@ -49,7 +49,7 @@ require(['jquery'], function ($) {
 
     function clearAlert() { $('#mondoo-alert').hide().text(''); }
 
-    function escHtml(str) {
+    function escapeHtml(str) {
         return String(str || '')
             .replace(/&/g, '&amp;').replace(/</g, '&lt;')
             .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -67,7 +67,7 @@ require(['jquery'], function ($) {
             renderTable((data && data.entry) ? data.entry : []);
         }).fail(function (xhr) {
             var msg = 'Failed to load inputs (HTTP ' + xhr.status + '): ' + extractError(xhr);
-            $('#inputs-tbody').html('<tr><td colspan="6" class="mondoo-error">' + escHtml(msg) + '</td></tr>');
+            $('#inputs-tbody').html('<tr><td colspan="6" class="mondoo-error">' + escapeHtml(msg) + '</td></tr>');
         });
     }
 
@@ -86,15 +86,15 @@ require(['jquery'], function ($) {
                 ? '<span class="mondoo-badge mondoo-badge-disabled">Disabled</span>'
                 : '<span class="mondoo-badge mondoo-badge-enabled">Enabled</span>';
             return '<tr>' +
-                '<td>' + escHtml(label) + '</td>' +
-                '<td>' + escHtml(c.log_types || 'audit') + '</td>' +
-                '<td>' + escHtml(c.index || 'main') + '</td>' +
-                '<td>' + escHtml(c.interval || '300') + '</td>' +
+                '<td>' + escapeHtml(label) + '</td>' +
+                '<td>' + escapeHtml(c.log_types || 'audit') + '</td>' +
+                '<td>' + escapeHtml(c.index || 'main') + '</td>' +
+                '<td>' + escapeHtml(c.interval || '300') + '</td>' +
                 '<td>' + badge + '</td>' +
                 '<td class="mondoo-actions">' +
-                  '<button class="btn btn-secondary btn-sm mondoo-btn-edit" data-name="' + escHtml(name) + '">Edit</button> ' +
-                  '<button class="btn btn-secondary btn-sm mondoo-btn-toggle" data-name="' + escHtml(name) + '" data-disabled="' + dis + '">' + (dis ? 'Enable' : 'Disable') + '</button> ' +
-                  '<button class="btn btn-danger btn-sm mondoo-btn-delete" data-name="' + escHtml(name) + '">Delete</button>' +
+                  '<button class="btn btn-secondary btn-sm mondoo-btn-edit" data-name="' + escapeHtml(name) + '">Edit</button> ' +
+                  '<button class="btn btn-secondary btn-sm mondoo-btn-toggle" data-name="' + escapeHtml(name) + '" data-disabled="' + dis + '">' + (dis ? 'Enable' : 'Disable') + '</button> ' +
+                  '<button class="btn btn-danger btn-sm mondoo-btn-delete" data-name="' + escapeHtml(name) + '">Delete</button>' +
                 '</td>' +
             '</tr>';
         });
