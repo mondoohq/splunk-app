@@ -25,7 +25,7 @@ jobs:
       security-events: write # required to upload SARIF to code scanning
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0 # required for diff-aware scanning on pull requests
           persist-credentials: false
@@ -38,7 +38,7 @@ jobs:
           fail-on: "off" # report-only for now; findings land in the Security tab
       - name: Upload SARIF results
         if: always()
-        uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
         with:
           sarif_file: results.sarif
           category: xgrep
@@ -51,7 +51,7 @@ jobs:
       security-events: write # required to upload SARIF to code scanning
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0 # required for diff-aware scanning on pull requests
           persist-credentials: false
@@ -68,7 +68,7 @@ jobs:
           args: "--category correctness,best-practice --include '*.sh'"
       - name: Upload SARIF results
         if: always()
-        uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
         with:
           sarif_file: shell.sarif
           category: xgrep-shell
